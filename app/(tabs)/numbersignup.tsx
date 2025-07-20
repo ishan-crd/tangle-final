@@ -1,25 +1,27 @@
+// numbersignup.tsx
 import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   Image,
-  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 
-// Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
-
 const { width, height } = Dimensions.get("window");
-const router = useRouter();
 
-export default function WelcomeScreen() {
-  const [fontsLoaded, setFontsLoaded] = React.useState(false);
+export default function NumberSignup() {
+  const router = useRouter();
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   useEffect(() => {
     async function loadFonts() {
@@ -40,39 +42,33 @@ export default function WelcomeScreen() {
     loadFonts();
   }, []);
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  if (!fontsLoaded) return null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Background decorative elements */}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={styles.container}
+    >
+      {/* Background avatars */}
       <View style={styles.decorativeContainer}>
-        {/* Top left avatar */}
         <View style={[styles.avatarContainer, styles.topLeft]}>
           <Image
             source={require("../../assets/images/avatar1.png")}
             style={styles.avatarTwo}
           />
         </View>
-
-        {/* Top right avatar */}
         <View style={[styles.avatarContainer, styles.topRight]}>
           <Image
             source={require("../../assets/images/avatar2.png")}
             style={styles.avatarOne}
           />
         </View>
-
-        {/* Bottom left avatar */}
         <View style={[styles.avatarContainer, styles.bottomLeft]}>
           <Image
             source={require("../../assets/images/avatar3.png")}
             style={styles.avatarOne}
           />
         </View>
-
-        {/* Bottom right avatar */}
         <View style={[styles.avatarContainer, styles.bottomRight]}>
           <Image
             source={require("../../assets/images/avatar4.png")}
@@ -83,26 +79,36 @@ export default function WelcomeScreen() {
 
       {/* Main content */}
       <View style={styles.contentContainer}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.welcomeText}>Hey, welcome to</Text>
-          <Text style={styles.tangleText}>Tangle!</Text>
+        <Text style={styles.welcomeText}>Can we get your</Text>
+        <Text style={styles.tangleText}>number, please?</Text>
+        <Text style={styles.descriptionText}>
+          We only use phone numbers to make sure everyone on tangle is real.
+        </Text>
+
+        {/* Input Field */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.countryCode}>+91</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your number"
+            placeholderTextColor="#999"
+            keyboardType="phone-pad"
+            maxLength={10}
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+          />
         </View>
 
-        <Text style={styles.descriptionText}>
-          Ready to find your squad in the society? Let's set up your profile
-          real quick! 😎
-        </Text>
+        {/* Continue Button */}
+        <TouchableOpacity
+          style={styles.continueButton}
+          activeOpacity={0.8}
+          onPress={() => router.push("/otpverify")}
+        >
+          <Text style={styles.buttonText}>Continue</Text>
+        </TouchableOpacity>
       </View>
-
-      {/* Bottom positioned button */}
-      <TouchableOpacity
-        style={styles.bottomButton}
-        activeOpacity={0.8}
-        onPress={() => router.push("/signupscreen")}
-      >
-        <Text style={styles.buttonText}>Let's Go</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -150,15 +156,10 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   contentContainer: {
-    position: "absolute",
-    top: 92,
-    left: 18,
-    right: 18,
-    alignItems: "flex-start",
-  },
-  titleContainer: {
-    alignItems: "flex-start",
-    marginBottom: 32,
+    flex: 1,
+    marginTop: 100,
+    paddingHorizontal: 24,
+    justifyContent: "flex-start",
   },
   welcomeText: {
     fontSize: 36,
@@ -168,9 +169,10 @@ const styles = StyleSheet.create({
   },
   tangleText: {
     fontSize: 40,
-    fontFamily: "NeuePlak-ExtendedBlack",
+    fontFamily: "NeuePlak-ExtendedBold",
     color: "#FF917F",
     lineHeight: 42,
+    marginBottom: 24,
   },
   descriptionText: {
     fontSize: 16,
@@ -178,47 +180,45 @@ const styles = StyleSheet.create({
     color: "#666666",
     lineHeight: 24,
     marginBottom: 48,
-    maxWidth: 280,
+    maxWidth: 300,
   },
-  bottomButton: {
-    position: "absolute",
-    top: 552,
-    left: 128,
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor: "#E5E5E5",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    marginBottom: 28,
+  },
+  countryCode: {
+    fontSize: 16,
+    fontFamily: "Montserrat-Bold",
+    color: "#1A1A1A",
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: "Montserrat-Light",
+    color: "#1A1A1A",
+  },
+  continueButton: {
     backgroundColor: "#FF723B",
-    width: 144,
-    height: 46,
-    borderRadius: 23,
-    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: "center",
-    shadowColor: "#FF725B",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowColor: "#FF723B",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  button: {
-    backgroundColor: "#FF725B",
-    width: 144,
-    height: 46,
-    borderRadius: 23,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#FF725B",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowRadius: 6,
+    elevation: 6,
   },
   buttonText: {
     fontSize: 16,
     fontFamily: "Montserrat-Bold",
     color: "#FFFFFF",
-    textAlign: "center",
   },
 });
