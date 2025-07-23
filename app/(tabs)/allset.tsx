@@ -1,14 +1,13 @@
 import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -16,11 +15,11 @@ import {
 SplashScreen.preventAutoHideAsync();
 const { height } = Dimensions.get("window");
 
-export default function OtpVerify() {
+export default function AllSet() {
   const router = useRouter();
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const inputs = useRef<TextInput[]>([]);
+  const [society, setSociety] = useState("");
+  const [flat, setFlat] = useState("");
 
   useEffect(() => {
     async function loadFonts() {
@@ -41,16 +40,6 @@ export default function OtpVerify() {
     loadFonts();
   }, []);
 
-  const handleChange = (text: string, index: number) => {
-    const newOtp = [...otp];
-    newOtp[index] = text;
-    setOtp(newOtp);
-
-    if (text && index < 5) {
-      inputs.current[index + 1]?.focus();
-    }
-  };
-
   if (!fontsLoaded) return null;
 
   return (
@@ -58,55 +47,20 @@ export default function OtpVerify() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      {/* Main content */}
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>Verify your</Text>
-        <Text style={styles.titleAccent}>number</Text>
-        <View style={{ marginBottom: 30 }}>
-          <Text style={styles.subtitle}>
-            Enter the code we’ve sent by text to
-            {"\n"}
-            <Text style={{ fontFamily: "Montserrat-Bold" }}>
-              +91 8383091028
-            </Text>
-            <Text>{"  "}</Text>
-            <Text
-              style={styles.changeNumberTextInline}
-              onPress={() => router.push("/changenumber")}
-            >
-              Change number
-            </Text>
-          </Text>
-        </View>
-
-        <Text style={styles.codeLabel}>Code</Text>
-
-        {/* OTP boxes */}
-        <View style={styles.otpContainer}>
-          {otp.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={(ref) => (inputs.current[index] = ref!)}
-              style={styles.otpInput}
-              maxLength={1}
-              keyboardType="numeric"
-              value={digit}
-              onChangeText={(text) => handleChange(text, index)}
-            />
-          ))}
-        </View>
-
-        <Text style={styles.resendText}>
-          Didn’t get a code?{" "}
-          <Text style={{ textDecorationLine: "underline" }}>Resend</Text>
+        <Text style={styles.title}>You’re all set!</Text>
+        <Text style={styles.subtitle}>
+          That’s it! You’re ready to Tangle and meet new people in your society.
+          Let’s get this party started! 🎉
         </Text>
-
         <View style={{ alignItems: "center" }}>
           <TouchableOpacity
             style={styles.continueButton}
             activeOpacity={0.8}
-            onPress={() => router.push("/profilebasic")}
+            onPress={() => router.push("/findyourbuddy")}
           >
-            <Text style={styles.buttonText}>Next</Text>
+            <Text style={styles.buttonText}>Start Exploring!</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -166,65 +120,40 @@ const styles = StyleSheet.create({
     fontFamily: "NeuePlak-ExtendedBlack",
     color: "#1A1A1A",
     lineHeight: 50,
+    marginBottom: 40,
   },
   titleAccent: {
     fontSize: 40,
     fontFamily: "NeuePlak-ExtendedBlack",
-    color: "#1A1A1A",
+    color: "#000000ff",
     lineHeight: 42,
     marginBottom: 20,
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: "Montserrat-Light",
-    color: "#666",
-    marginBottom: 30,
-    maxWidth: 300,
-  },
-  codeLabel: {
-    fontSize: 14,
-    fontFamily: "Montserrat-Bold",
-    color: "#1A1A1A",
-    marginBottom: 8,
-  },
-  otpContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 24,
-  },
-  otpInput: {
-    width: 55,
-    height: 64,
-    borderWidth: 1,
-    borderColor: "#000000ff",
-    borderRadius: 25,
-    textAlign: "center",
-    fontSize: 20,
-    fontFamily: "Montserrat-Bold",
-    color: "#1A1A1A",
-  },
-  resendText: {
-    fontSize: 14,
-    fontFamily: "Montserrat-Light",
-    color: "#666",
+    fontFamily: "Montserrat-SemiBold",
+    color: "#00000",
     marginBottom: 32,
   },
+  label: {
+    fontSize: 14,
+    fontFamily: "Montserrat-Light",
+    color: "#000000ff",
+    marginBottom: 8,
+  },
+
   continueButton: {
-    backgroundColor: "#D7E0FF",
-    width: 100,
-    height: 46,
+    backgroundColor: "#C0D9BF",
+    width: 220,
+    height: 56,
     borderRadius: 23,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 120,
   },
   buttonText: {
     fontSize: 18,
     fontFamily: "Montserrat-SemiBold",
     color: "#000000ff",
-  },
-  changeNumberTextInline: {
-    fontFamily: "Montserrat-Bold",
-    color: "#1A1A1A",
-    textDecorationLine: "underline",
   },
 });

@@ -16,6 +16,10 @@ export default function RootLayout() {
       <Stack.Screen name="interestscreen" />
       <Stack.Screen name="aboutyou" />
       <Stack.Screen name="EmojiAvatarScreen" />
+      <Stack.Screen name="notifications" />
+      <Stack.Screen name="allset" />
+      <Stack.Screen name="findyourbuddy" />
+      <Stack.Screen name="profile" />
     </Stack>
   );
 }

@@ -65,8 +65,7 @@ export default function InterestScreen() {
       <View style={styles.contentContainer}>
         {/* Title and subtitle */}
         <View style={styles.header}>
-          <Text style={styles.title}>Choose your</Text>
-          <Text style={styles.titleAccent}>interests</Text>
+          <Text style={styles.title}>Choose your interests</Text>
           <Text style={styles.subtitle}>
             Pick a few things you love so we can match you with people who share
             your vibe!
@@ -93,9 +92,9 @@ export default function InterestScreen() {
         {/* Done Button */}
         <TouchableOpacity
           style={styles.doneButton}
-          onPress={() => router.push("/EmojiAvatarScreen")}
+          onPress={() => router.push("/aboutyou")}
         >
-          <Text style={styles.doneText}>Done</Text>
+          <Text style={styles.doneText}>Done with this!</Text>
         </TouchableOpacity>
 
         {/* Footer */}
@@ -161,22 +160,16 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontSize: 36,
+    fontSize: 30,
     fontFamily: "NeuePlak-ExtendedBold",
     color: "#1A1A1A",
     lineHeight: 50,
   },
-  titleAccent: {
-    fontSize: 40,
-    fontFamily: "NeuePlak-ExtendedBlack",
-    color: "#FF917F",
-    lineHeight: 42,
-    marginBottom: 12,
-  },
   subtitle: {
     fontSize: 14,
-    fontFamily: "Montserrat-Light",
+    fontFamily: "Montserrat-SemiBold",
     color: "#666",
+    textAlign: "center",
   },
   grid: {
     flexDirection: "row",
@@ -211,9 +204,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   doneButton: {
-    backgroundColor: "#FF723B",
+    backgroundColor: "#FFC2B8",
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: "center",
     marginBottom: 12,
     shadowColor: "#FF723B",
@@ -221,16 +214,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 6,
+    width: 180,
+    alignSelf: "center",
   },
   doneText: {
     fontSize: 16,
     fontFamily: "Montserrat-Bold",
-    color: "#FFF",
+    color: "#000000",
   },
   footerText: {
     textAlign: "center",
-    fontSize: 14,
-    fontFamily: "Montserrat-Light",
-    color: "#666",
+    fontSize: 10,
+    fontFamily: "Montserrat-Bold",
+    color: "#000000",
+    bottom: 30,
   },
 });
