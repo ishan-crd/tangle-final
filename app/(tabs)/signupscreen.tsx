@@ -63,11 +63,6 @@ export default function signupscreen() {
       {/* Social login buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
-          <Ionicons name="logo-facebook" size={20} color="#1877F2" />
-          <Text style={styles.buttonText}>Continue with Facebook</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
           <Ionicons name="logo-apple" size={20} color="#000000" />
           <Text style={styles.buttonText}>Continue with Apple</Text>
         </TouchableOpacity>
@@ -76,12 +71,6 @@ export default function signupscreen() {
           <Ionicons name="logo-google" size={20} color="#EA4335" />
           <Text style={styles.buttonText}>Continue with Google</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
-          <Ionicons name="mail-outline" size={20} color="#666666" />
-          <Text style={styles.buttonText}>Continue with Email</Text>
-        </TouchableOpacity>
-
         <TouchableOpacity
           style={styles.socialButton}
           activeOpacity={0.8}
@@ -181,9 +170,14 @@ const styles = StyleSheet.create({
     color: "#666666",
   },
   footer: {
+    position: "absolute",
+    bottom: 30,
+    left: 0,
+    right: 0,
     alignItems: "center",
     gap: 4,
   },
+
   footerText: {
     fontSize: 14,
     fontFamily: "Montserrat-Light",

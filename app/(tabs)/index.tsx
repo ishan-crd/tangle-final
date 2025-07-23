@@ -29,6 +29,7 @@ export default function WelcomeScreen() {
           "NeuePlak-ExtendedBlack": require("../../assets/fonts/Neue-Plak-Extended-Black.ttf"),
           "Montserrat-Light": require("../../assets/fonts/Montserrat-Light.ttf"),
           "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),
+          "Montserrat-SemiBold": require("../../assets/fonts/Montserrat-SemiBold.ttf"),
         });
         setFontsLoaded(true);
         SplashScreen.hideAsync();
@@ -162,20 +163,20 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 36,
-    fontFamily: "NeuePlak-ExtendedBold",
+    fontFamily: "NeuePlak-ExtendedBlack",
     color: "#1A1A1A",
     lineHeight: 50,
   },
   tangleText: {
     fontSize: 40,
     fontFamily: "NeuePlak-ExtendedBlack",
-    color: "#FF917F",
+    color: "#000000ff",
     lineHeight: 42,
   },
   descriptionText: {
     fontSize: 16,
-    fontFamily: "Montserrat-Light",
-    color: "#666666",
+    fontFamily: "Montserrat-Bold",
+    color: "#000000ff",
     lineHeight: 24,
     marginBottom: 48,
     maxWidth: 280,
@@ -184,13 +185,13 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 552,
     left: 128,
-    backgroundColor: "#FF723B",
+    backgroundColor: "#C0D9BF",
     width: 144,
     height: 46,
     borderRadius: 23,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#FF725B",
+    shadowColor: "#C0D9BF",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -200,13 +201,13 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   button: {
-    backgroundColor: "#FF725B",
+    backgroundColor: "#84dd80ff",
     width: 144,
     height: 46,
     borderRadius: 23,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#FF725B",
+    shadowColor: "#81cf7fff",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -218,7 +219,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontFamily: "Montserrat-Bold",
-    color: "#FFFFFF",
+    color: "#000000ff",
     textAlign: "center",
   },
 });

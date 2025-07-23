@@ -5,7 +5,6 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
-  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -49,64 +48,45 @@ export default function NumberSignup() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.container}
     >
-      {/* Background avatars */}
-      <View style={styles.decorativeContainer}>
-        <View style={[styles.avatarContainer, styles.topLeft]}>
-          <Image
-            source={require("../../assets/images/avatar1.png")}
-            style={styles.avatarTwo}
-          />
-        </View>
-        <View style={[styles.avatarContainer, styles.topRight]}>
-          <Image
-            source={require("../../assets/images/avatar2.png")}
-            style={styles.avatarOne}
-          />
-        </View>
-        <View style={[styles.avatarContainer, styles.bottomLeft]}>
-          <Image
-            source={require("../../assets/images/avatar3.png")}
-            style={styles.avatarOne}
-          />
-        </View>
-        <View style={[styles.avatarContainer, styles.bottomRight]}>
-          <Image
-            source={require("../../assets/images/avatar4.png")}
-            style={styles.avatarTwo}
-          />
-        </View>
-      </View>
-
       {/* Main content */}
       <View style={styles.contentContainer}>
         <Text style={styles.welcomeText}>Can we get your</Text>
-        <Text style={styles.tangleText}>number, please?</Text>
+        <Text style={styles.welcomeText}>number, please?</Text>
         <Text style={styles.descriptionText}>
           We only use phone numbers to make sure everyone on tangle is real.
         </Text>
 
         {/* Input Field */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.countryCode}>+91</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your number"
-            placeholderTextColor="#999"
-            keyboardType="phone-pad"
-            maxLength={10}
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-          />
+        <View style={styles.phoneInputRow}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Country</Text>
+            <View style={styles.countryInput} />
+          </View>
+
+          <View style={[styles.inputGroup, { flex: 1 }]}>
+            <Text style={styles.inputLabel}>Phone number</Text>
+            <TextInput
+              style={styles.phoneInput}
+              placeholder=""
+              placeholderTextColor="#999"
+              keyboardType="phone-pad"
+              maxLength={10}
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+            />
+          </View>
         </View>
 
         {/* Continue Button */}
-        <TouchableOpacity
-          style={styles.continueButton}
-          activeOpacity={0.8}
-          onPress={() => router.push("/otpverify")}
-        >
-          <Text style={styles.buttonText}>Continue</Text>
-        </TouchableOpacity>
+        <View style={{ alignItems: "center" }}>
+          <TouchableOpacity
+            style={styles.continueButton}
+            activeOpacity={0.8}
+            onPress={() => router.push("/otpverify")}
+          >
+            <Text style={styles.buttonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -163,22 +143,23 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 36,
-    fontFamily: "NeuePlak-ExtendedBold",
+    fontFamily: "NeuePlak-ExtendedBlack",
     color: "#1A1A1A",
-    lineHeight: 50,
+    lineHeight: 37,
   },
   tangleText: {
     fontSize: 40,
-    fontFamily: "NeuePlak-ExtendedBold",
+    fontFamily: "NeuePlak-ExtendedBlack",
     color: "#FF917F",
     lineHeight: 42,
     marginBottom: 24,
   },
   descriptionText: {
-    fontSize: 16,
-    fontFamily: "Montserrat-Light",
+    fontSize: 13,
+    fontFamily: "Montserrat-SemiBold",
     color: "#666666",
     lineHeight: 24,
+    marginTop: 12,
     marginBottom: 48,
     maxWidth: 300,
   },
@@ -206,19 +187,73 @@ const styles = StyleSheet.create({
     color: "#1A1A1A",
   },
   continueButton: {
-    backgroundColor: "#FF723B",
-    paddingVertical: 14,
-    borderRadius: 12,
+    backgroundColor: "#D7E0FF",
+    width: 100,
+    height: 46,
+    borderRadius: 23,
+    justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#FF723B",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
   },
   buttonText: {
-    fontSize: 16,
-    fontFamily: "Montserrat-Bold",
-    color: "#FFFFFF",
+    fontSize: 18,
+    fontFamily: "Montserrat-SemiBold",
+    color: "#000000ff",
+  },
+  phoneInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 28,
+  },
+
+  countryInput: {
+    width: 80,
+    height: 44,
+    borderWidth: 1,
+    borderColor: "#000000",
+    borderRadius: 70,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+
+  phoneInput: {
+    flex: 1,
+    height: 44,
+    backgroundColor: "#eee",
+    borderWidth: 1,
+    borderColor: "#000000",
+    borderRadius: 70,
+    paddingHorizontal: 16,
+    fontSize: 14,
+    fontFamily: "Montserrat-Light",
+    color: "#1A1A1A",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+
+  label: {
+    fontSize: 13,
+    fontFamily: "Montserrat-Light",
+    color: "#1A1A1A",
+  },
+  inputGroup: {
+    flexDirection: "column",
+  },
+
+  inputLabel: {
+    fontSize: 13,
+    fontFamily: "Montserrat-SemiBold",
+    color: "#1A1A1A",
+    marginBottom: 6,
+    marginLeft: 7,
   },
 });
