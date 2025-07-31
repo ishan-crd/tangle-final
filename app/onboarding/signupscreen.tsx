@@ -74,7 +74,7 @@ export default function signupscreen() {
         <TouchableOpacity
           style={styles.socialButton}
           activeOpacity={0.8}
-          onPress={() => router.push("/numbersignup")}
+          onPress={() => router.push("/onboarding/numbersignup")}
         >
           <Ionicons name="call-outline" size={20} color="#666666" />
           <Text style={styles.buttonText}>Continue with Number</Text>

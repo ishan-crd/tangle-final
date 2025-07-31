@@ -8,6 +8,7 @@ import {
   Platform,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -15,7 +16,7 @@ import {
 SplashScreen.preventAutoHideAsync();
 const { height } = Dimensions.get("window");
 
-export default function AllSet() {
+export default function AboutYou() {
   const router = useRouter();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [society, setSociety] = useState("");
@@ -49,20 +50,37 @@ export default function AllSet() {
     >
       {/* Main content */}
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>You’re all set!</Text>
+        <Text style={styles.title}>Tell us about</Text>
+        <Text style={styles.titleAccent}>yourself 😏</Text>
         <Text style={styles.subtitle}>
-          That’s it! You’re ready to Tangle and meet new people in your society.
-          Let’s get this party started! 🎉
+          Write a short bio. Make it funny, serious, or mysterious — it’s your
+          call!
         </Text>
+
+        <Text style={styles.label}>Bio</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Your story in 140 characters max."
+          placeholderTextColor="#999"
+          value={society}
+          onChangeText={setSociety}
+          multiline={true}
+          numberOfLines={4}
+        />
+
         <View style={{ alignItems: "center" }}>
           <TouchableOpacity
             style={styles.continueButton}
             activeOpacity={0.8}
-            onPress={() => router.push("/findyourbuddy")}
+            onPress={() => router.push("/onboarding/notifications")}
           >
-            <Text style={styles.buttonText}>Start Exploring!</Text>
+            <Text style={styles.buttonText}>Next</Text>
           </TouchableOpacity>
         </View>
+        {/* Footer */}
+        <Text style={styles.footerText}>
+          We won’t tell anyone if you copy-paste it from Google 😏
+        </Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -120,18 +138,17 @@ const styles = StyleSheet.create({
     fontFamily: "NeuePlak-ExtendedBlack",
     color: "#1A1A1A",
     lineHeight: 50,
-    marginBottom: 40,
   },
   titleAccent: {
     fontSize: 40,
     fontFamily: "NeuePlak-ExtendedBlack",
-    color: "#000000ff",
+    color: "#1A1A1A",
     lineHeight: 42,
     marginBottom: 20,
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: "Montserrat-SemiBold",
+    fontFamily: "Montserrat-Thin",
     color: "#00000",
     marginBottom: 32,
   },
@@ -141,19 +158,39 @@ const styles = StyleSheet.create({
     color: "#000000ff",
     marginBottom: 8,
   },
+  input: {
+    backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor: "#b4b4b4ff",
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginBottom: 100,
+    fontSize: 13,
+    fontFamily: "Montserrat-SemiBold",
+    color: "#1A1A1A",
+    height: 140,
+    textAlignVertical: "top",
+  },
 
   continueButton: {
-    backgroundColor: "#C0D9BF",
-    width: 220,
-    height: 56,
+    backgroundColor: "#D7E0FF",
+    width: 100,
+    height: 46,
     borderRadius: 23,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 120,
   },
   buttonText: {
     fontSize: 18,
     fontFamily: "Montserrat-SemiBold",
     color: "#000000ff",
+  },
+  footerText: {
+    marginTop: 200,
+    textAlign: "center",
+    fontSize: 11,
+    fontFamily: "Montserrat-Bold",
+    color: "#000000",
   },
 });

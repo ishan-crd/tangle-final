@@ -1,12 +1,8 @@
 import { Stack } from "expo-router";
 
-export default function RootLayout() {
+export default function OnboardingLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="signupscreen" />
       <Stack.Screen name="numbersignup" />
@@ -19,7 +15,7 @@ export default function RootLayout() {
       <Stack.Screen name="notifications" />
       <Stack.Screen name="allset" />
       <Stack.Screen name="findyourbuddy" />
-      <Stack.Screen name="profile" />
+      <Stack.Screen name="changenumber" />
     </Stack>
   );
 }

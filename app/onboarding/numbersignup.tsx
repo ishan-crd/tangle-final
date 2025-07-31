@@ -82,7 +82,7 @@ export default function NumberSignup() {
           <TouchableOpacity
             style={styles.continueButton}
             activeOpacity={0.8}
-            onPress={() => router.push("/otpverify")}
+            onPress={() => router.push("/onboarding/otpverify")}
           >
             <Text style={styles.buttonText}>Next</Text>
           </TouchableOpacity>

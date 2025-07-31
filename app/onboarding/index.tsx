@@ -1,7 +1,7 @@
 import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   Image,
@@ -16,10 +16,10 @@ import {
 SplashScreen.preventAutoHideAsync();
 
 const { width, height } = Dimensions.get("window");
-const router = useRouter();
 
 export default function WelcomeScreen() {
-  const [fontsLoaded, setFontsLoaded] = React.useState(false);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     async function loadFonts() {
@@ -99,7 +99,7 @@ export default function WelcomeScreen() {
       <TouchableOpacity
         style={styles.bottomButton}
         activeOpacity={0.8}
-        onPress={() => router.push("/signupscreen")}
+        onPress={() => router.push("/onboarding/signupscreen")}
       >
         <Text style={styles.buttonText}>Let's Go</Text>
       </TouchableOpacity>
@@ -192,22 +192,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#C0D9BF",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  button: {
-    backgroundColor: "#84dd80ff",
-    width: 144,
-    height: 46,
-    borderRadius: 23,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#81cf7fff",
     shadowOffset: {
       width: 0,
       height: 4,

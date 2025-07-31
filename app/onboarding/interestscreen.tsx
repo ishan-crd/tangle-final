@@ -1,7 +1,7 @@
 import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dimensions,
   StyleSheet,
@@ -92,7 +92,7 @@ export default function InterestScreen() {
         {/* Done Button */}
         <TouchableOpacity
           style={styles.doneButton}
-          onPress={() => router.push("/aboutyou")}
+          onPress={() => router.push("/onboarding/aboutyou")}
         >
           <Text style={styles.doneText}>Done with this!</Text>
         </TouchableOpacity>

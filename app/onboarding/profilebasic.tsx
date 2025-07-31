@@ -16,10 +16,12 @@ import {
 SplashScreen.preventAutoHideAsync();
 const { height } = Dimensions.get("window");
 
-export default function ChangeNumber() {
+export default function ProfileBasic() {
   const router = useRouter();
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
 
   useEffect(() => {
     async function loadFonts() {
@@ -47,33 +49,53 @@ export default function ChangeNumber() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      {/* Main content */}
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>Change</Text>
-        <Text style={styles.titleAccent}>your number</Text>
-        <Text style={styles.subtitle}>
-          Enter the new number you want to verify.
-        </Text>
+        <Text style={styles.title}>Set up your</Text>
+        <Text style={styles.titleAccent}>profile ✍️</Text>
+        <Text style={styles.subtitle}>Let’s start with the basics</Text>
 
-        <Text style={styles.codeLabel}>Phone Number</Text>
-
+        <Text style={styles.label}>What’s your name or nickname?</Text>
         <TextInput
-          style={styles.phoneInput}
-          keyboardType="phone-pad"
-          placeholder="+91 XXXXX XXXXX"
-          value={phoneNumber}
-          onChangeText={setPhoneNumber}
+          style={styles.input}
+          placeholder="Name"
+          value={name}
+          onChangeText={setName}
+          placeholderTextColor="#999"
+        />
+
+        <Text style={styles.label}>How young are you</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Age"
+          value={age}
+          onChangeText={setAge}
+          keyboardType="numeric"
+          placeholderTextColor="#999"
+        />
+
+        <Text style={styles.label}>Gender</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Select your gender"
+          value={gender}
+          onChangeText={setGender}
+          placeholderTextColor="#999"
         />
 
         <View style={{ alignItems: "center" }}>
           <TouchableOpacity
             style={styles.continueButton}
             activeOpacity={0.8}
-            onPress={() => router.push("/otpverify")}
+            onPress={() => router.push("/onboarding/addressscreen")}
           >
             <Text style={styles.buttonText}>Next</Text>
           </TouchableOpacity>
         </View>
       </View>
+      <Text style={styles.footerText}>
+        Don’t worry, we won’t ask for your blood type… yet 😜
+      </Text>
     </KeyboardAvoidingView>
   );
 }
@@ -87,39 +109,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: "100%",
     height: "100%",
-  },
-  avatarContainer: {
-    position: "absolute",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    padding: 8,
-  },
-  topLeft: {
-    top: height * 0.47,
-    left: 30,
-  },
-  topRight: {
-    top: height * 0.38,
-    right: 80,
-  },
-  bottomLeft: {
-    bottom: height * 0.05,
-    left: 25,
-  },
-  bottomRight: {
-    bottom: height * 0.08,
-    right: 30,
-  },
-  avatarOne: {
-    width: 114,
-    height: 114,
-    borderRadius: 32,
-  },
-  avatarTwo: {
-    width: 84,
-    height: 84,
-    borderRadius: 32,
   },
   contentContainer: {
     marginTop: 100,
@@ -139,29 +128,28 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   subtitle: {
-    fontSize: 14,
-    fontFamily: "Montserrat-Light",
+    fontSize: 16,
+    fontFamily: "Montserrat-SemiBold",
     color: "#666",
-    marginBottom: 30,
-    maxWidth: 300,
+    marginBottom: 32,
   },
-  codeLabel: {
+  label: {
     fontSize: 14,
-    fontFamily: "Montserrat-Bold",
+    fontFamily: "Montserrat-Thin",
     color: "#1A1A1A",
     marginBottom: 8,
   },
-  phoneInput: {
-    width: "100%",
-    height: 64,
+  input: {
+    backgroundColor: "#FFF",
     borderWidth: 1,
-    borderColor: "#000000ff",
-    borderRadius: 25,
-    paddingHorizontal: 20,
+    borderColor: "#E5E5E5",
+    borderRadius: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginBottom: 24,
     fontSize: 16,
-    fontFamily: "Montserrat-Bold",
+    fontFamily: "Montserrat-SemiBold",
     color: "#1A1A1A",
-    marginBottom: 32,
   },
   continueButton: {
     backgroundColor: "#D7E0FF",
@@ -175,5 +163,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Montserrat-SemiBold",
     color: "#000000ff",
+  },
+  footerText: {
+    textAlign: "center",
+    fontSize: 14,
+    fontFamily: "Montserrat-Bold",
+    color: "#1A1A1A",
+    position: "absolute",
+    bottom: 20,
+    left: 0,
+    right: 0,
+  },
+
+  footer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    gap: 4,
   },
 });

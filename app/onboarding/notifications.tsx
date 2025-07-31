@@ -94,7 +94,7 @@ export default function Notifications() {
           <TouchableOpacity
             style={styles.doneButton}
             activeOpacity={0.8}
-            onPress={() => router.push("/allset")}
+            onPress={() => router.push("/onboarding/allset")}
           >
             <Text style={styles.doneButtonText}>Done with settings🔔</Text>
           </TouchableOpacity>

@@ -83,7 +83,7 @@ export default function EmojiAvatarScreen() {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push("/nextscreen")}
+                  onPress={() => router.push("/onboarding/notifications")}
       >
         <Text style={styles.buttonText}>Next</Text>
       </TouchableOpacity>

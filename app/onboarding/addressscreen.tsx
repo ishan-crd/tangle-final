@@ -78,7 +78,7 @@ export default function AddressScreen() {
           <TouchableOpacity
             style={styles.continueButton}
             activeOpacity={0.8}
-            onPress={() => router.push("/interestscreen")}
+            onPress={() => router.push("/onboarding/interestscreen")}
           >
             <Text style={styles.buttonText}>Next</Text>
           </TouchableOpacity>

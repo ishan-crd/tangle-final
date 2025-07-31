@@ -3,31 +3,58 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { useFonts } from "expo-font";
+import * as Font from "expo-font";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-  });
+  const [fontsLoaded, setFontsLoaded] = useState(false);
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
+  useEffect(() => {
+    async function loadFonts() {
+      try {
+        await Font.loadAsync({
+          "NeuePlak-ExtendedBold": require("../assets/fonts/Neue-Plak-Extended-Bold.ttf"),
+          "NeuePlak-ExtendedBlack": require("../assets/fonts/Neue-Plak-Extended-Black.ttf"),
+          "Montserrat-Light": require("../assets/fonts/Montserrat-Light.ttf"),
+          "Montserrat-Bold": require("../assets/fonts/Montserrat-Bold.ttf"),
+          "Montserrat-SemiBold": require("../assets/fonts/Montserrat-SemiBold.ttf"),
+          "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
+        });
+        setFontsLoaded(true);
+        SplashScreen.hideAsync();
+      } catch (error) {
+        console.error("Error loading fonts:", error);
+        // Continue without fonts if they fail to load
+        setFontsLoaded(true);
+        SplashScreen.hideAsync();
+      }
+    }
+
+    loadFonts();
+  }, []);
+
+  if (!fontsLoaded) {
     return null;
   }
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="onboarding" />
+        <Stack.Screen name="main" />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
     </ThemeProvider>
   );
 }

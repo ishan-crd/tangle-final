@@ -1,15 +1,15 @@
 import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Dimensions,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 SplashScreen.preventAutoHideAsync();
@@ -79,7 +79,7 @@ export default function FindYourBuddy() {
 
         <TouchableOpacity
           style={styles.nextButton}
-          onPress={() => router.push("/profile")}
+          onPress={() => router.push("/main/profile")}
         >
           <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>

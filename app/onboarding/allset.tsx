@@ -8,7 +8,6 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -16,12 +15,11 @@ import {
 SplashScreen.preventAutoHideAsync();
 const { height } = Dimensions.get("window");
 
-export default function ProfileBasic() {
+export default function AllSet() {
   const router = useRouter();
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-  const [gender, setGender] = useState("");
+  const [society, setSociety] = useState("");
+  const [flat, setFlat] = useState("");
 
   useEffect(() => {
     async function loadFonts() {
@@ -51,51 +49,21 @@ export default function ProfileBasic() {
     >
       {/* Main content */}
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>Set up your</Text>
-        <Text style={styles.titleAccent}>profile ✍️</Text>
-        <Text style={styles.subtitle}>Let’s start with the basics</Text>
-
-        <Text style={styles.label}>What’s your name or nickname?</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Name"
-          value={name}
-          onChangeText={setName}
-          placeholderTextColor="#999"
-        />
-
-        <Text style={styles.label}>How young are you</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Age"
-          value={age}
-          onChangeText={setAge}
-          keyboardType="numeric"
-          placeholderTextColor="#999"
-        />
-
-        <Text style={styles.label}>Gender</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Select your gender"
-          value={gender}
-          onChangeText={setGender}
-          placeholderTextColor="#999"
-        />
-
+        <Text style={styles.title}>You’re all set!</Text>
+        <Text style={styles.subtitle}>
+          That’s it! You’re ready to Tangle and meet new people in your society.
+          Let’s get this party started! 🎉
+        </Text>
         <View style={{ alignItems: "center" }}>
           <TouchableOpacity
             style={styles.continueButton}
             activeOpacity={0.8}
-            onPress={() => router.push("/addressscreen")}
+            onPress={() => router.push("/onboarding/findyourbuddy")}
           >
-            <Text style={styles.buttonText}>Next</Text>
+            <Text style={styles.buttonText}>Start Exploring!</Text>
           </TouchableOpacity>
         </View>
       </View>
-      <Text style={styles.footerText}>
-        Don’t worry, we won’t ask for your blood type… yet 😜
-      </Text>
     </KeyboardAvoidingView>
   );
 }
@@ -110,6 +78,39 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  avatarContainer: {
+    position: "absolute",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    padding: 8,
+  },
+  topLeft: {
+    top: height * 0.47,
+    left: 30,
+  },
+  topRight: {
+    top: height * 0.38,
+    right: 80,
+  },
+  bottomLeft: {
+    bottom: height * 0.05,
+    left: 25,
+  },
+  bottomRight: {
+    bottom: height * 0.08,
+    right: 30,
+  },
+  avatarOne: {
+    width: 114,
+    height: 114,
+    borderRadius: 32,
+  },
+  avatarTwo: {
+    width: 84,
+    height: 84,
+    borderRadius: 32,
+  },
   contentContainer: {
     marginTop: 100,
     paddingHorizontal: 24,
@@ -119,67 +120,40 @@ const styles = StyleSheet.create({
     fontFamily: "NeuePlak-ExtendedBlack",
     color: "#1A1A1A",
     lineHeight: 50,
+    marginBottom: 40,
   },
   titleAccent: {
     fontSize: 40,
     fontFamily: "NeuePlak-ExtendedBlack",
-    color: "#1A1A1A",
+    color: "#000000ff",
     lineHeight: 42,
     marginBottom: 20,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: "Montserrat-SemiBold",
-    color: "#666",
+    color: "#00000",
     marginBottom: 32,
   },
   label: {
     fontSize: 14,
-    fontFamily: "Montserrat-Thin",
-    color: "#1A1A1A",
+    fontFamily: "Montserrat-Light",
+    color: "#000000ff",
     marginBottom: 8,
   },
-  input: {
-    backgroundColor: "#FFF",
-    borderWidth: 1,
-    borderColor: "#E5E5E5",
-    borderRadius: 30,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    marginBottom: 24,
-    fontSize: 16,
-    fontFamily: "Montserrat-SemiBold",
-    color: "#1A1A1A",
-  },
+
   continueButton: {
-    backgroundColor: "#D7E0FF",
-    width: 100,
-    height: 46,
+    backgroundColor: "#C0D9BF",
+    width: 220,
+    height: 56,
     borderRadius: 23,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 120,
   },
   buttonText: {
     fontSize: 18,
     fontFamily: "Montserrat-SemiBold",
     color: "#000000ff",
-  },
-  footerText: {
-    textAlign: "center",
-    fontSize: 14,
-    fontFamily: "Montserrat-Bold",
-    color: "#1A1A1A",
-    position: "absolute",
-    bottom: 20,
-    left: 0,
-    right: 0,
-  },
-
-  footer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    gap: 4,
   },
 });
