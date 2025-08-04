@@ -1,25 +1,28 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Dimensions,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import { useUser } from "../../contexts/UserContext";
 
 SplashScreen.preventAutoHideAsync();
 const { height } = Dimensions.get("window");
 
 export default function AllSet() {
   const router = useRouter();
+  const { user } = useUser();
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [society, setSociety] = useState("");
-  const [flat, setFlat] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadFonts() {
@@ -40,6 +43,25 @@ export default function AllSet() {
     loadFonts();
   }, []);
 
+  const handleStartExploring = async () => {
+    setIsLoading(true);
+    try {
+      // Mark onboarding as complete
+      await AsyncStorage.setItem('onboardingComplete', 'true');
+      
+      // Save user data to AsyncStorage
+      if (user) {
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+      }
+      
+      router.push("/onboarding/findyourbuddy");
+    } catch (error) {
+      Alert.alert("Error", "Failed to complete onboarding");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!fontsLoaded) return null;
 
   return (
@@ -49,18 +71,21 @@ export default function AllSet() {
     >
       {/* Main content */}
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>You’re all set!</Text>
+        <Text style={styles.title}>You're all set!</Text>
         <Text style={styles.subtitle}>
-          That’s it! You’re ready to Tangle and meet new people in your society.
-          Let’s get this party started! 🎉
+          That's it! You're ready to Tangle and meet new people in your society.
+          Let's get this party started! 🎉
         </Text>
         <View style={{ alignItems: "center" }}>
           <TouchableOpacity
-            style={styles.continueButton}
+            style={[styles.continueButton, isLoading && styles.disabledButton]}
             activeOpacity={0.8}
-            onPress={() => router.push("/onboarding/findyourbuddy")}
+            onPress={handleStartExploring}
+            disabled={isLoading}
           >
-            <Text style={styles.buttonText}>Start Exploring!</Text>
+            <Text style={styles.buttonText}>
+              {isLoading ? "Setting up..." : "Start Exploring!"}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -141,7 +166,6 @@ const styles = StyleSheet.create({
     color: "#000000ff",
     marginBottom: 8,
   },
-
   continueButton: {
     backgroundColor: "#C0D9BF",
     width: 220,
@@ -150,6 +174,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 120,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   buttonText: {
     fontSize: 18,

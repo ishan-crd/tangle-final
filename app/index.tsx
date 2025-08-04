@@ -1,19 +1,34 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 export default function Index() {
   const router = useRouter();
 
+  useEffect(() => {
+    async function checkOnboardingStatus() {
+      try {
+        const onboardingComplete = await AsyncStorage.getItem('onboardingComplete');
+        if (onboardingComplete === 'true') {
+          router.replace("/main");
+        } else {
+          router.replace("/onboarding");
+        }
+      } catch (error) {
+        console.error("Error checking onboarding status:", error);
+        router.replace("/onboarding");
+      }
+    }
+
+    checkOnboardingStatus();
+  }, [router]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Tangle!</Text>
       <Text style={styles.subtitle}>Your sports social app</Text>
-      <View 
-        style={styles.button}
-        onTouchEnd={() => router.push("/main")}
-      >
-        <Text style={styles.buttonText}>Get Started</Text>
-      </View>
+      <Text style={styles.loading}>Loading...</Text>
     </View>
   );
 }

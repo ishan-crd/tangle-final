@@ -1,25 +1,34 @@
 import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  Dimensions,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
+// import { sendOTP, verifyOTP } from "../../lib/firebase"; // Comment out real Firebase
+import { useUser } from "../../contexts/UserContext";
+import { getCurrentOTP, sendOTP, verifyOTP } from "../../lib/mockFirebase"; // Use mock for Expo Go
 
 SplashScreen.preventAutoHideAsync();
 const { height } = Dimensions.get("window");
 
 export default function OtpVerify() {
   const router = useRouter();
+  const { user } = useUser();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [confirmation, setConfirmation] = useState<any>(null);
+  const [countdown, setCountdown] = useState(0);
+  const [otpSent, setOtpSent] = useState(false);
   const inputs = useRef<TextInput[]>([]);
 
   useEffect(() => {
@@ -41,6 +50,43 @@ export default function OtpVerify() {
     loadFonts();
   }, []);
 
+  useEffect(() => {
+    // Send OTP when component mounts, but only once
+    if (user?.phone && !otpSent) {
+      sendOTPToPhone();
+    }
+  }, [user, otpSent]);
+
+  useEffect(() => {
+    // Countdown timer for resend
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  const sendOTPToPhone = async () => {
+    if (!user?.phone || otpSent) return;
+    
+    setIsLoading(true);
+    try {
+      const phoneNumber = user.phone.startsWith('+') ? user.phone : `+${user.phone}`;
+      const result = await sendOTP(phoneNumber);
+      setConfirmation(result);
+      setCountdown(30); // 30 second countdown
+      setOtpSent(true); // Mark OTP as sent
+      
+      // For mock testing, show the OTP in alert
+      const currentOTP = getCurrentOTP();
+      Alert.alert("Mock OTP", `For testing: ${currentOTP}\n\nIn real app, this would be sent via SMS.`);
+    } catch (error: any) {
+      console.error('Error sending OTP:', error);
+      Alert.alert("Error", "Failed to send OTP: " + (error?.message || 'Unknown error'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleChange = (text: string, index: number) => {
     const newOtp = [...otp];
     newOtp[index] = text;
@@ -49,6 +95,40 @@ export default function OtpVerify() {
     if (text && index < 5) {
       inputs.current[index + 1]?.focus();
     }
+  };
+
+  const handleVerifyOTP = async () => {
+    const otpCode = otp.join("");
+    if (otpCode.length !== 6) {
+      Alert.alert("Error", "Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await verifyOTP(confirmation, otpCode);
+      Alert.alert("Success", "Phone number verified successfully!");
+      
+      // Check if user has completed onboarding (has name, age, etc.)
+      if (user?.name && user.name !== "Number User" && user.name !== "Apple User" && user.name !== "Google User") {
+        // User has completed onboarding, go to main app
+        router.push("/main");
+      } else {
+        // User needs to complete onboarding
+        router.push("/onboarding/profilebasic");
+      }
+    } catch (error: any) {
+      console.error('Error verifying OTP:', error);
+      Alert.alert("Error", "Invalid OTP code. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOTP = () => {
+    if (countdown > 0) return;
+    setOtpSent(false); // Reset the flag to allow resending
+    sendOTPToPhone();
   };
 
   if (!fontsLoaded) return null;
@@ -63,10 +143,10 @@ export default function OtpVerify() {
         <Text style={styles.titleAccent}>number</Text>
         <View style={{ marginBottom: 30 }}>
           <Text style={styles.subtitle}>
-            Enter the code we’ve sent by text to
+            Enter the code we've sent by text to
             {"\n"}
             <Text style={{ fontFamily: "Montserrat-Bold" }}>
-              +91 8383091028
+              {user?.phone || "+91 8383091028"}
             </Text>
             <Text>{"  "}</Text>
             <Text
@@ -85,7 +165,9 @@ export default function OtpVerify() {
           {otp.map((digit, index) => (
             <TextInput
               key={index}
-              ref={(ref) => (inputs.current[index] = ref!)}
+              ref={(ref) => {
+                if (ref) inputs.current[index] = ref;
+              }}
               style={styles.otpInput}
               maxLength={1}
               keyboardType="numeric"
@@ -96,17 +178,28 @@ export default function OtpVerify() {
         </View>
 
         <Text style={styles.resendText}>
-          Didn’t get a code?{" "}
-          <Text style={{ textDecorationLine: "underline" }}>Resend</Text>
+          Didn't get a code?{" "}
+          <Text 
+            style={{ 
+              textDecorationLine: "underline",
+              color: countdown > 0 ? "#999" : "#007AFF"
+            }}
+            onPress={handleResendOTP}
+          >
+            {countdown > 0 ? `Resend in ${countdown}s` : "Resend"}
+          </Text>
         </Text>
 
         <View style={{ alignItems: "center" }}>
           <TouchableOpacity
-            style={styles.continueButton}
+            style={[styles.continueButton, isLoading && styles.disabledButton]}
             activeOpacity={0.8}
-            onPress={() => router.push("/onboarding/profilebasic")}
+            onPress={handleVerifyOTP}
+            disabled={isLoading}
           >
-            <Text style={styles.buttonText}>Next</Text>
+            <Text style={styles.buttonText}>
+              {isLoading ? "Verifying..." : "Verify"}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -226,5 +319,9 @@ const styles = StyleSheet.create({
     fontFamily: "Montserrat-Bold",
     color: "#1A1A1A",
     textDecorationLine: "underline",
+  },
+  disabledButton: {
+    backgroundColor: "#E0E0E0",
+    opacity: 0.7,
   },
 });

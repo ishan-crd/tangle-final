@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   DarkTheme,
   DefaultTheme,
@@ -11,6 +12,7 @@ import { useEffect, useState } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { UserProvider } from "../contexts/UserContext";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -18,6 +20,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean | null>(null);
 
   useEffect(() => {
     async function loadFonts() {
@@ -40,21 +43,34 @@ export default function RootLayout() {
       }
     }
 
+    async function checkOnboardingStatus() {
+      try {
+        const onboardingComplete = await AsyncStorage.getItem('onboardingComplete');
+        setIsOnboardingComplete(onboardingComplete === 'true');
+      } catch (error) {
+        console.error("Error checking onboarding status:", error);
+        setIsOnboardingComplete(false);
+      }
+    }
+
     loadFonts();
+    checkOnboardingStatus();
   }, []);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || isOnboardingComplete === null) {
     return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen name="main" />
-      </Stack>
-      <StatusBar style="dark" />
-    </ThemeProvider>
+    <UserProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="main" />
+        </Stack>
+        <StatusBar style="dark" />
+      </ThemeProvider>
+    </UserProvider>
   );
 }

@@ -1,12 +1,15 @@
 import { useRouter } from "expo-router";
-import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
 import { useState } from "react";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useUser } from "../../../contexts/UserContext";
 
 const bestFriends = [
   {
@@ -33,7 +36,34 @@ const bestFriends = [
 
 export default function Profile() {
   const router = useRouter();
+  const { user, logout } = useUser();
   const [activeTab, setActiveTab] = useState("Connections");
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace("/");
+            } catch (error) {
+              console.error('Error logging out:', error);
+              Alert.alert("Error", "Failed to logout");
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -144,17 +174,41 @@ export default function Profile() {
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <View style={styles.headerActions}>
-          <View style={styles.actionButton}>
-            <Text style={styles.actionIcon}>✏️</Text>
-          </View>
+          <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
+            <Text style={styles.actionIcon}>🚪</Text>
+          </TouchableOpacity>
           <View style={styles.actionButton}>
             <Text style={styles.actionIcon}>⋮</Text>
           </View>
         </View>
+
         <Image
           source={require("../../../assets/emojis/emoji7.png")}
           style={styles.profileImage}
         />
+        
+        {/* User Info */}
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{user?.name || "User"}</Text>
+          <Text style={styles.userAge}>{user?.age ? `${user.age} years old` : ""}</Text>
+          <Text style={styles.userLocation}>
+            {user?.society ? `${user.society}, Flat ${user.flat}` : ""}
+          </Text>
+          
+          {/* Interests */}
+          {user?.interests && user.interests.length > 0 && (
+            <View style={styles.interestsContainer}>
+              <Text style={styles.interestsTitle}>Interests:</Text>
+              <View style={styles.interestsList}>
+                {user.interests.map((interest, index) => (
+                  <View key={index} style={styles.interestTag}>
+                    <Text style={styles.interestText}>{interest}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Navigation Tabs */}
@@ -223,6 +277,51 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
+  },
+  userInfo: {
+    alignItems: "center",
+    marginTop: 15,
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 5,
+  },
+  userAge: {
+    fontSize: 16,
+    color: "#666666",
+    marginBottom: 5,
+  },
+  userLocation: {
+    fontSize: 14,
+    color: "#666666",
+    marginBottom: 15,
+  },
+  interestsContainer: {
+    alignItems: "center",
+  },
+  interestsTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 8,
+  },
+  interestsList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 8,
+  },
+  interestTag: {
+    backgroundColor: "#FFE4E1",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  interestText: {
+    fontSize: 12,
+    color: "#000000",
   },
   tabBar: {
     flexDirection: "row",

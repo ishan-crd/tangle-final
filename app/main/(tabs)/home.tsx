@@ -1,33 +1,89 @@
+import { useEffect, useState } from "react";
 import {
-  Dimensions,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    Dimensions,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
+import { useUser } from "../../../contexts/UserContext";
+import { Post, postService } from "../../../lib/supabase";
 
 const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
+  const { user } = useUser();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadPosts();
+  }, [user]);
+
+  const loadPosts = async () => {
+    try {
+      const postsData = await postService.getPostsBySocietyName('', '');
+      setPosts(postsData);
+    } catch (error) {
+      console.error('Error loading posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadPosts();
+    setRefreshing(false);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 48) return "Yesterday";
+    return date.toLocaleDateString();
+  };
+
+  const getFirstName = (fullName: string) => {
+    return fullName.split(' ')[0];
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.username}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }>
         {/* Header Section */}
         <View style={styles.header}>
           <View style={styles.userInfo}>
             <View style={styles.avatarContainer}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>I</Text>
+                <Text style={styles.avatarText}>
+                  {getFirstName(user?.name || 'User').charAt(0)}
+                </Text>
               </View>
             </View>
             <View style={styles.welcomeText}>
               <Text style={styles.welcomeSmall}>Welcome back,</Text>
-              <Text style={styles.username}>Ishan</Text>
+              <Text style={styles.username}>{getFirstName(user?.name || 'User')}</Text>
             </View>
-          </View>
-          <View style={styles.notificationButton}>
-            <Text style={styles.notificationIcon}>🔔</Text>
           </View>
         </View>
 
@@ -78,181 +134,56 @@ export default function HomeScreen() {
         <View style={styles.feedSection}>
           <Text style={styles.feedTitle}>Feed</Text>
           
-          {/* Post 1 */}
-          <View style={styles.postCard}>
-            <View style={styles.postHeader}>
-              <View style={styles.postAvatar}>
-                <Text style={styles.postAvatarText}>S</Text>
-              </View>
-              <View style={styles.postUserInfo}>
-                <Text style={styles.postUsername}>Suresh</Text>
-                <Text style={styles.postTime}>2 hours ago</Text>
-              </View>
+          {posts.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateIcon}>📝</Text>
+              <Text style={styles.emptyStateTitle}>No posts yet</Text>
+              <Text style={styles.emptyStateText}>
+                Be the first to share something with your society!
+              </Text>
             </View>
-            
-            <Text style={styles.postContent}>
-              Looking for a partner to play badminton this evening at 5 PM. Anyone interested?
-            </Text>
-            
-            <View style={styles.eventCard}>
-              <View style={styles.eventInfo}>
-                <Text style={styles.eventTitle}>Badminton Match</Text>
-                <Text style={styles.eventTime}>Today at 5:00 PM</Text>
+          ) : (
+            posts.map((post) => (
+              <View key={post.id} style={styles.postCard}>
+                <View style={styles.postHeader}>
+                  <View style={styles.postAvatar}>
+                    <Text style={styles.postAvatarText}>
+                      {post.user_profiles?.name?.charAt(0) || 'U'}
+                    </Text>
+                  </View>
+                  <View style={styles.postUserInfo}>
+                    <Text style={styles.postUsername}>
+                      {post.user_profiles?.name || 'Anonymous'}
+                    </Text>
+                    <Text style={styles.postTime}>
+                      {formatDate(post.created_at)}
+                    </Text>
+                  </View>
+                </View>
+                
+                <Text style={styles.postContent}>
+                  {post.content}
+                </Text>
+                
+                {/* Match/Event Card if it's a match post */}
+                {post.post_type === 'match' && (
+                  <View style={styles.eventCard}>
+                    <View style={styles.eventInfo}>
+                      <Text style={styles.eventTitle}>
+                        {post.title?.replace('🏀 ', '') || 'Match'}
+                      </Text>
+                      <Text style={styles.eventTime}>
+                        Today at 5:00 PM
+                      </Text>
+                    </View>
+                    <View style={styles.joinButton}>
+                      <Text style={styles.joinButtonText}>Join</Text>
+                    </View>
+                  </View>
+                )}
               </View>
-              <View style={styles.joinButton}>
-                <Text style={styles.joinButtonText}>Join</Text>
-              </View>
-            </View>
-          </View>
-          
-          {/* Post 2 */}
-          <View style={styles.postCard}>
-            <View style={styles.postHeader}>
-              <View style={styles.postAvatar}>
-                <Text style={styles.postAvatarText}>Y</Text>
-              </View>
-              <View style={styles.postUserInfo}>
-                <Text style={styles.postUsername}>Yash</Text>
-                <Text style={styles.postTime}>1 hour ago</Text>
-              </View>
-            </View>
-            
-            <Text style={styles.postContent}>
-              Anyone up for a game of basketball tomorrow morning at 8 AM?
-            </Text>
-            
-            <View style={styles.eventCard}>
-              <View style={styles.eventInfo}>
-                <Text style={styles.eventTitle}>Basketball Game</Text>
-                <Text style={styles.eventTime}>Tomorrow at 8:00 AM</Text>
-              </View>
-              <View style={styles.joinButton}>
-                <Text style={styles.joinButtonText}>Join</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Post 3 - Regular Social Post */}
-          <View style={styles.postCard}>
-            <View style={styles.postHeader}>
-              <View style={styles.postAvatar}>
-                <Text style={styles.postAvatarText}>A</Text>
-              </View>
-              <View style={styles.postUserInfo}>
-                <Text style={styles.postUsername}>Aditya</Text>
-                <Text style={styles.postTime}>3 hours ago</Text>
-              </View>
-            </View>
-            
-            <Text style={styles.postContent}>
-              Just finished an amazing workout session! 💪 The new gym in our area is incredible. Anyone else tried it out?
-            </Text>
-          </View>
-
-          {/* Post 4 - Achievement Post */}
-          <View style={styles.postCard}>
-            <View style={styles.postHeader}>
-              <View style={styles.postAvatar}>
-                <Text style={styles.postAvatarText}>P</Text>
-              </View>
-              <View style={styles.postUserInfo}>
-                <Text style={styles.postUsername}>Priya</Text>
-                <Text style={styles.postTime}>5 hours ago</Text>
-              </View>
-            </View>
-            
-            <Text style={styles.postContent}>
-              Finally hit my goal of running 10km! 🏃‍♀️ It took months of training but totally worth it. Next target: half marathon!
-            </Text>
-          </View>
-
-          {/* Post 5 - Equipment/Recommendation */}
-          <View style={styles.postCard}>
-            <View style={styles.postHeader}>
-              <View style={styles.postAvatar}>
-                <Text style={styles.postAvatarText}>R</Text>
-              </View>
-              <View style={styles.postUserInfo}>
-                <Text style={styles.postUsername}>Rahul</Text>
-                <Text style={styles.postTime}>6 hours ago</Text>
-              </View>
-            </View>
-            
-            <Text style={styles.postContent}>
-              Just got these new running shoes and they're amazing! Perfect for long-distance runs. Anyone looking for good running gear recommendations?
-            </Text>
-          </View>
-
-          {/* Post 6 - Another Match Invitation */}
-          <View style={styles.postCard}>
-            <View style={styles.postHeader}>
-              <View style={styles.postAvatar}>
-                <Text style={styles.postAvatarText}>M</Text>
-              </View>
-              <View style={styles.postUserInfo}>
-                <Text style={styles.postUsername}>Meera</Text>
-                <Text style={styles.postTime}>8 hours ago</Text>
-              </View>
-            </View>
-            
-            <Text style={styles.postContent}>
-              Looking for a tennis partner for weekend matches. Intermediate level preferred. Anyone interested?
-            </Text>
-            
-            <View style={styles.eventCard}>
-              <View style={styles.eventInfo}>
-                <Text style={styles.eventTitle}>Tennis Match</Text>
-                <Text style={styles.eventTime}>This Weekend</Text>
-              </View>
-              <View style={styles.joinButton}>
-                <Text style={styles.joinButtonText}>Join</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Post 7 - Fitness Motivation */}
-          <View style={styles.postCard}>
-            <View style={styles.postHeader}>
-              <View style={styles.postAvatar}>
-                <Text style={styles.postAvatarText}>K</Text>
-              </View>
-              <View style={styles.postUserInfo}>
-                <Text style={styles.postUsername}>Karan</Text>
-                <Text style={styles.postTime}>10 hours ago</Text>
-              </View>
-            </View>
-            
-            <Text style={styles.postContent}>
-              Remember: Every expert was once a beginner. Don't let the fear of being bad at something stop you from trying! 💪
-            </Text>
-          </View>
-
-          {/* Post 8 - Local Event */}
-          <View style={styles.postCard}>
-            <View style={styles.postHeader}>
-              <View style={styles.postAvatar}>
-                <Text style={styles.postAvatarText}>S</Text>
-              </View>
-              <View style={styles.postUserInfo}>
-                <Text style={styles.postUsername}>Sarah</Text>
-                <Text style={styles.postTime}>12 hours ago</Text>
-              </View>
-            </View>
-            
-            <Text style={styles.postContent}>
-              There's a local 5K charity run happening next month! Great cause and perfect for beginners. Who's joining?
-            </Text>
-            
-            <View style={styles.eventCard}>
-              <View style={styles.eventInfo}>
-                <Text style={styles.eventTitle}>Charity 5K Run</Text>
-                <Text style={styles.eventTime}>Next Month</Text>
-              </View>
-              <View style={styles.joinButton}>
-                <Text style={styles.joinButtonText}>Join</Text>
-              </View>
-            </View>
-          </View>
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -307,15 +238,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333333",
     fontFamily: "Montserrat-Bold",
-  },
-  notificationButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  notificationIcon: {
-    fontSize: 24,
   },
   
   // Stories Styles
@@ -480,5 +402,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     fontFamily: "Montserrat-SemiBold",
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 60,
+  },
+  emptyStateIcon: {
+    fontSize: 60,
+    marginBottom: 20,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333333",
+    marginBottom: 10,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: "#666666",
+    textAlign: "center",
+    marginBottom: 30,
+    lineHeight: 24,
   },
 }); 

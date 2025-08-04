@@ -1,148 +1,173 @@
 import {
-  Dimensions,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 export default function HubScreen() {
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Hub</Text>
-          <Text style={styles.headerSubtitle}>Discover everything in your community</Text>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Hub</Text>
+        <Text style={styles.subtitle}>Discover and connect</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        
+        <View style={styles.actionGrid}>
+          <TouchableOpacity style={styles.actionCard}>
+            <Text style={styles.actionIcon}>🏢</Text>
+            <Text style={styles.actionTitle}>Societies</Text>
+            <Text style={styles.actionSubtitle}>Find nearby societies</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.actionCard}>
+            <Text style={styles.actionIcon}>👥</Text>
+            <Text style={styles.actionTitle}>Groups</Text>
+            <Text style={styles.actionSubtitle}>Join sports groups</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.actionCard}>
+            <Text style={styles.actionIcon}>🎯</Text>
+            <Text style={styles.actionTitle}>Challenges</Text>
+            <Text style={styles.actionSubtitle}>Participate in challenges</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.actionCard}>
+            <Text style={styles.actionIcon}>🏅</Text>
+            <Text style={styles.actionTitle}>Achievements</Text>
+            <Text style={styles.actionSubtitle}>View your badges</Text>
+          </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Text style={styles.searchIcon}>🔍</Text>
-            <Text style={styles.searchText}>Search features...</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Trending</Text>
+        
+        <View style={styles.trendingList}>
+          <View style={styles.trendingItem}>
+            <Text style={styles.trendingEmoji}>🔥</Text>
+            <View style={styles.trendingContent}>
+              <Text style={styles.trendingTitle}>Basketball Tournament</Text>
+              <Text style={styles.trendingSubtitle}>15 people joined</Text>
+            </View>
+            <Text style={styles.trendingCount}>#1</Text>
           </View>
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <View style={styles.actionRow}>
-            <View style={styles.actionCard}>
-              <Text style={styles.actionIcon}>🎁</Text>
-              <Text style={styles.actionText}>Offers</Text>
+          
+          <View style={styles.trendingItem}>
+            <Text style={styles.trendingEmoji}>🏸</Text>
+            <View style={styles.trendingContent}>
+              <Text style={styles.trendingTitle}>Badminton League</Text>
+              <Text style={styles.trendingSubtitle}>8 teams registered</Text>
             </View>
-            <View style={styles.actionCard}>
-              <Text style={styles.actionIcon}>📊</Text>
-              <Text style={styles.actionText}>Polls</Text>
-            </View>
-            <View style={styles.actionCard}>
-              <Text style={styles.actionIcon}>📅</Text>
-              <Text style={styles.actionText}>Book Slots</Text>
-            </View>
+            <Text style={styles.trendingCount}>#2</Text>
           </View>
-        </View>
-
-        {/* Feature Cards Grid - 2 Columns */}
-        <View style={styles.cardsContainer}>
-          <View style={styles.cardRow}>
-            {/* Tournaments Card */}
-            <View style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardIcon}>🏆</Text>
-                <Text style={styles.cardTitle}>Tournaments</Text>
-                <Text style={styles.cardBadge}>3 Active</Text>
-              </View>
+          
+          <View style={styles.trendingItem}>
+            <Text style={styles.trendingEmoji}>🎾</Text>
+            <View style={styles.trendingContent}>
+              <Text style={styles.trendingTitle}>Tennis Doubles</Text>
+              <Text style={styles.trendingSubtitle}>12 players online</Text>
             </View>
-
-            {/* Community Events Card */}
-            <View style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardIcon}>🎉</Text>
-                <Text style={styles.cardTitle}>Events</Text>
-                <Text style={styles.cardBadge}>2 Upcoming</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.cardRow}>
-            {/* Interest Groups Card */}
-            <View style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardIcon}>👥</Text>
-                <Text style={styles.cardTitle}>Interest Circles</Text>
-                <Text style={styles.cardBadge}>12 Groups</Text>
-              </View>
-            </View>
-
-            {/* Announcements Card */}
-            <View style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardIcon}>📢</Text>
-                <Text style={styles.cardTitle}>Announcements</Text>
-                <Text style={styles.cardBadge}>5 New</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.cardRow}>
-            {/* Local Services Card */}
-            <View style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardIcon}>🛠️</Text>
-                <Text style={styles.cardTitle}>Local Services</Text>
-                <Text style={styles.cardBadge}>8 Available</Text>
-              </View>
-            </View>
-
-            {/* Safety & Security Card */}
-            <View style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardIcon}>🛡️</Text>
-                <Text style={styles.cardTitle}>Safety Hub</Text>
-                <Text style={styles.cardBadge}>24/7</Text>
-              </View>
-            </View>
+            <Text style={styles.trendingCount}>#3</Text>
           </View>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Nearby Activities</Text>
+        
+        <View style={styles.activityList}>
+          <View style={styles.activityCard}>
+            <View style={styles.activityHeader}>
+              <Text style={styles.activityEmoji}>🏀</Text>
+              <View style={styles.activityInfo}>
+                <Text style={styles.activityTitle}>Basketball Court</Text>
+                <Text style={styles.activityLocation}>500m away</Text>
+              </View>
+              <View style={styles.activityStats}>
+                <Text style={styles.participantCount}>8</Text>
+                <Text style={styles.participantLabel}>players</Text>
+              </View>
+            </View>
+          </View>
+          
+          <View style={styles.activityCard}>
+            <View style={styles.activityHeader}>
+              <Text style={styles.activityEmoji}>🏸</Text>
+              <View style={styles.activityInfo}>
+                <Text style={styles.activityTitle}>Badminton Court</Text>
+                <Text style={styles.activityLocation}>1km away</Text>
+              </View>
+              <View style={styles.activityStats}>
+                <Text style={styles.participantCount}>4</Text>
+                <Text style={styles.participantLabel}>players</Text>
+              </View>
+            </View>
+          </View>
+          
+          <View style={styles.activityCard}>
+            <View style={styles.activityHeader}>
+              <Text style={styles.activityEmoji}>🎾</Text>
+              <View style={styles.activityInfo}>
+                <Text style={styles.activityTitle}>Tennis Court</Text>
+                <Text style={styles.activityLocation}>2km away</Text>
+              </View>
+              <View style={styles.activityStats}>
+                <Text style={styles.participantCount}>2</Text>
+                <Text style={styles.participantLabel}>players</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: "#FFFFFF",
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 15,
+    padding: 20,
+    backgroundColor: "#F8F9FA",
   },
-  headerTitle: {
+  title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#1A1A1A",
+    color: "#333333",
     marginBottom: 5,
   },
-  headerSubtitle: {
+  subtitle: {
     fontSize: 16,
     color: "#666666",
   },
-  searchContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
+  section: {
+    padding: 20,
   },
-  searchBar: {
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333333",
+    marginBottom: 15,
+  },
+  actionGrid: {
     flexDirection: "row",
-    alignItems: "center",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  actionCard: {
+    width: "48%",
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
+    padding: 20,
+    marginBottom: 15,
+    alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -152,29 +177,25 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  searchIcon: {
-    fontSize: 18,
-    marginRight: 10,
+  actionIcon: {
+    fontSize: 32,
+    marginBottom: 10,
   },
-  searchText: {
+  actionTitle: {
     fontSize: 16,
-    color: "#999999",
+    fontWeight: "bold",
+    color: "#333333",
+    marginBottom: 5,
+    textAlign: "center",
   },
-  quickActions: {
-    paddingHorizontal: 20,
-    marginBottom: 25,
+  actionSubtitle: {
+    fontSize: 12,
+    color: "#666666",
+    textAlign: "center",
   },
-  actionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  actionCard: {
+  trendingList: {
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
-    padding: 15,
-    alignItems: "center",
-    flex: 1,
-    marginHorizontal: 5,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -182,64 +203,83 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
-    elevation: 3,
+    elevation: 5,
   },
-  actionIcon: {
+  trendingItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  trendingEmoji: {
     fontSize: 24,
-    marginBottom: 8,
+    marginRight: 15,
   },
-  actionText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#333333",
-  },
-  cardsContainer: {
-    paddingHorizontal: 20,
+  trendingContent: {
     flex: 1,
   },
-  cardRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
+  trendingTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333333",
   },
-  card: {
+  trendingSubtitle: {
+    fontSize: 14,
+    color: "#666666",
+  },
+  trendingCount: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#3575EC",
+  },
+  activityList: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    width: (width - 60) / 2, // 2 columns with padding
-    aspectRatio: 1, // Square boxes
+    borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 6.27,
-    elevation: 8,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  cardContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  activityCard: {
     padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
   },
-  cardIcon: {
-    fontSize: 36,
-    marginBottom: 10,
+  activityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  cardTitle: {
+  activityEmoji: {
+    fontSize: 24,
+    marginRight: 15,
+  },
+  activityInfo: {
+    flex: 1,
+  },
+  activityTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#1A1A1A",
-    textAlign: "center",
-    marginBottom: 8,
+    color: "#333333",
   },
-  cardBadge: {
-    backgroundColor: "#E3F2FD",
-    color: "#1976D2",
-    fontSize: 11,
-    fontWeight: "600",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
+  activityLocation: {
+    fontSize: 14,
+    color: "#666666",
+  },
+  activityStats: {
+    alignItems: "center",
+  },
+  participantCount: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#3575EC",
+  },
+  participantLabel: {
+    fontSize: 10,
+    color: "#666666",
   },
 }); 

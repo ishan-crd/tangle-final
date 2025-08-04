@@ -1,9 +1,9 @@
-import { useFonts } from "@expo-google-fonts/montserrat";
-import { Ionicons } from "@expo/vector-icons";
+import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
   Platform,
   StatusBar,
@@ -12,13 +12,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useUser } from "../../contexts/UserContext";
+import { userService } from "../../lib/supabase";
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
-const router = useRouter();
 
 export default function signupscreen() {
-  const [fontsLoaded, fontError] = useFonts({
+  const router = useRouter();
+  const { setUser } = useUser();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [fontsLoaded, fontError] = Font.useFonts({
     "NeuePlak-ExtendedBold": require("../../assets/fonts/Neue-Plak-Extended-Bold.ttf"),
     "Montserrat-Light": require("../../assets/fonts/Montserrat-Light.ttf"),
     "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),
@@ -29,6 +34,80 @@ export default function signupscreen() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
+
+  const handleNumberSignup = () => {
+    router.push("/onboarding/numbersignup");
+  };
+
+  const handleLogin = () => {
+    router.push("/onboarding/numbersignup?mode=login");
+  };
+
+  const handleAppleSignup = async () => {
+    setIsLoading(true);
+    try {
+      // Create a user with minimal required data
+      const mockUser = {
+        name: "Apple User",
+        age: 0, // Default age
+        phone: "+1234567890",
+        interests: [],
+        address: "",
+        society: "",
+        flat: "",
+        avatar: "",
+        bio: "",
+        gender: ""
+      };
+
+      console.log('Creating user profile:', mockUser);
+      const userProfile = await userService.createUserProfile(mockUser);
+      console.log('User profile created:', userProfile);
+      
+      // Set the user in context immediately
+      setUser(userProfile);
+      
+      router.push("/onboarding/profilebasic");
+    } catch (error) {
+      console.error('Error creating user:', error);
+      Alert.alert("Error", "Failed to sign up with Apple");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    setIsLoading(true);
+    try {
+      // Create a user with minimal required data
+      const mockUser = {
+        name: "Google User",
+        age: 0, // Default age
+        phone: "+1234567891",
+        interests: [],
+        address: "",
+        society: "",
+        flat: "",
+        avatar: "",
+        bio: "",
+        gender: ""
+      };
+
+      console.log('Creating user profile:', mockUser);
+      const userProfile = await userService.createUserProfile(mockUser);
+      console.log('User profile created:', userProfile);
+      
+      // Set the user in context immediately
+      setUser(userProfile);
+      
+      router.push("/onboarding/profilebasic");
+    } catch (error) {
+      console.error('Error creating user:', error);
+      Alert.alert("Error", "Failed to sign up with Google");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!fontsLoaded && !fontError) {
     return null;
@@ -62,27 +141,40 @@ export default function signupscreen() {
 
       {/* Social login buttons */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
-          <Ionicons name="logo-apple" size={20} color="#000000" />
-          <Text style={styles.buttonText}>Continue with Apple</Text>
+        <TouchableOpacity
+          style={[styles.socialButton, isLoading && styles.disabledButton]} 
+          activeOpacity={0.8}
+          onPress={handleAppleSignup}
+          disabled={isLoading}
+        >
+          <Text style={styles.buttonText}>
+            {isLoading ? "Loading..." : "Continue with Apple"}
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
-          <Ionicons name="logo-google" size={20} color="#EA4335" />
-          <Text style={styles.buttonText}>Continue with Google</Text>
-        </TouchableOpacity>
         <TouchableOpacity
-          style={styles.socialButton}
+          style={[styles.socialButton, isLoading && styles.disabledButton]} 
           activeOpacity={0.8}
-          onPress={() => router.push("/onboarding/numbersignup")}
+          onPress={handleGoogleSignup}
+          disabled={isLoading}
         >
-          <Ionicons name="call-outline" size={20} color="#666666" />
+          <Text style={styles.buttonText}>
+            {isLoading ? "Loading..." : "Continue with Google"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.socialButton, isLoading && styles.disabledButton]}
+          activeOpacity={0.8}
+          onPress={handleNumberSignup}
+          disabled={isLoading}
+        >
           <Text style={styles.buttonText}>Continue with Number</Text>
         </TouchableOpacity>
       </View>
 
       {/* Login link */}
-      <TouchableOpacity style={styles.loginContainer} activeOpacity={0.8}>
+      <TouchableOpacity style={styles.loginContainer} activeOpacity={0.8} onPress={handleLogin}>
         <Text style={styles.loginText}>Already have an account? Log In</Text>
       </TouchableOpacity>
 
@@ -155,8 +247,12 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
+  disabledButton: {
+    opacity: 0.7,
+    backgroundColor: "#D7E0FF",
+  },
   buttonText: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: "Montserrat-Light",
     color: "#1A1A1A",
   },
@@ -177,7 +273,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
   },
-
   footerText: {
     fontSize: 14,
     fontFamily: "Montserrat-Light",

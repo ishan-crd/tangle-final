@@ -50,6 +50,11 @@ export default function FindYourBuddy() {
     loadFonts();
   }, []);
 
+  const handleNext = () => {
+    // Navigate to the main app
+    router.replace("/main");
+  };
+
   if (!fontsLoaded) return null;
 
   return (
@@ -79,9 +84,9 @@ export default function FindYourBuddy() {
 
         <TouchableOpacity
           style={styles.nextButton}
-          onPress={() => router.push("/main/profile")}
+          onPress={handleNext}
         >
-          <Text style={styles.nextButtonText}>Next</Text>
+          <Text style={styles.nextButtonText}>Enter App</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

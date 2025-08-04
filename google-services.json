@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "876688554833",
+    "project_id": "tangle-app-35712",
+    "storage_bucket": "tangle-app-35712.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:876688554833:android:c30fdcc8e23416c39bf170",
+        "android_client_info": {
+          "package_name": "com.tangle.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8KzFzLV8Np4MBYh7rcp_JT0BnJYcbNmc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

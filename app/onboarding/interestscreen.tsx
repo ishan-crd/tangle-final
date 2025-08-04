@@ -3,12 +3,14 @@ import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import { useUser } from "../../contexts/UserContext";
 
 SplashScreen.preventAutoHideAsync();
 const { height } = Dimensions.get("window");
@@ -30,8 +32,10 @@ const INTERESTS = [
 
 export default function InterestScreen() {
   const router = useRouter();
+  const { user, updateUserProfile } = useUser();
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>(user?.interests || []);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadFonts() {
@@ -56,6 +60,29 @@ export default function InterestScreen() {
     setSelected((prev) =>
       prev.includes(label) ? prev.filter((i) => i !== label) : [...prev, label]
     );
+  };
+
+  const handleDone = async () => {
+    // Require at least 1 interest
+    if (selected.length === 0) {
+      Alert.alert("Error", "Please select at least one interest");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log('Updating interests with:', selected);
+      await updateUserProfile({
+        interests: selected,
+      });
+      console.log('Interests updated successfully');
+      router.push("/onboarding/aboutyou");
+    } catch (error) {
+      console.error('Error updating interests:', error);
+      Alert.alert("Error", "Failed to save interests");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!fontsLoaded) return null;
@@ -91,15 +118,18 @@ export default function InterestScreen() {
 
         {/* Done Button */}
         <TouchableOpacity
-          style={styles.doneButton}
-          onPress={() => router.push("/onboarding/aboutyou")}
+          style={[styles.doneButton, isLoading && styles.disabledButton]}
+          onPress={handleDone}
+          disabled={isLoading}
         >
-          <Text style={styles.doneText}>Done with this!</Text>
+          <Text style={styles.doneText}>
+            {isLoading ? "Saving..." : "Done with this!"}
+          </Text>
         </TouchableOpacity>
 
         {/* Footer */}
         <Text style={styles.footerText}>
-          No judgment if you pick ‘Pets’ over ‘Fitness’ 😌
+          No judgment if you pick 'Pets' over 'Fitness' 😌
         </Text>
       </View>
     </View>
@@ -216,6 +246,9 @@ const styles = StyleSheet.create({
     elevation: 6,
     width: 180,
     alignSelf: "center",
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   doneText: {
     fontSize: 16,
