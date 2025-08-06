@@ -25,7 +25,12 @@ export default function HomeScreen() {
 
   const loadPosts = async () => {
     try {
-      const postsData = await postService.getPostsBySocietyName('', '');
+      if (!user?.society) {
+        setPosts([]);
+        return;
+      }
+      
+      const postsData = await postService.getPostsBySocietyName('', user.society);
       setPosts(postsData);
     } catch (error) {
       console.error('Error loading posts:', error);

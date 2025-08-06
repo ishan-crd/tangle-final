@@ -175,18 +175,18 @@ export default function NumberSignup() {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Main content */}
-        <View style={styles.contentContainer}>
-          <Text style={styles.welcomeText}>Can we get your</Text>
-          <Text style={styles.welcomeText}>number, please?</Text>
-          <Text style={styles.descriptionText}>
-            We only use phone numbers to make sure everyone on tangle is real.
-          </Text>
+      {/* Main content */}
+      <View style={styles.contentContainer}>
+        <Text style={styles.welcomeText}>Can we get your</Text>
+        <Text style={styles.welcomeText}>number, please?</Text>
+        <Text style={styles.descriptionText}>
+          We only use phone numbers to make sure everyone on tangle is real.
+        </Text>
 
-          {/* Input Field */}
-          <View style={styles.phoneInputRow}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Country</Text>
+        {/* Input Field */}
+        <View style={styles.phoneInputRow}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Country</Text>
               <TouchableOpacity
                 style={styles.countryInput}
                 onPress={() => setShowCountryDropdown(!showCountryDropdown)}
@@ -216,44 +216,44 @@ export default function NumberSignup() {
                   </ScrollView>
                 </View>
               )}
-            </View>
+          </View>
 
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.inputLabel}>Phone number</Text>
-              <TextInput
+          <View style={[styles.inputGroup, { flex: 1 }]}>
+            <Text style={styles.inputLabel}>Phone number</Text>
+            <TextInput
                 style={[styles.phoneInput, error && styles.inputError]}
                 placeholder="Enter 10 digit number"
-                placeholderTextColor="#999"
-                keyboardType="phone-pad"
-                maxLength={10}
-                value={phoneNumber}
+              placeholderTextColor="#999"
+              keyboardType="phone-pad"
+              maxLength={10}
+              value={phoneNumber}
                 onChangeText={(text) => {
                   setPhoneNumber(text);
                   setError("");
                 }}
-              />
-            </View>
+            />
           </View>
+        </View>
 
           {/* Error Message */}
           {error ? (
             <Text style={styles.errorText}>{error}</Text>
           ) : null}
 
-          {/* Continue Button */}
+        {/* Continue Button */}
           <View style={{ alignItems: "center", marginTop: 20 }}>
-            <TouchableOpacity
+          <TouchableOpacity
               style={[styles.continueButton, phoneNumber.length === 10 && styles.continueButtonActive, isLoading && styles.disabledButton]}
-              activeOpacity={0.8}
+            activeOpacity={0.8}
               onPress={handleNext}
               disabled={isLoading}
-            >
+          >
               <Text style={styles.buttonText}>
                 {isLoading ? "Loading..." : (isLoginMode ? "Login" : "Next")}
               </Text>
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </View>
+      </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );

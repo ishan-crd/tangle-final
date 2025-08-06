@@ -1,5 +1,5 @@
--- Tangle App Database Schema
--- Hierarchical structure: Country > States > Societies > Users
+-- Tangle App Database Tables
+-- Run this in your Supabase SQL Editor
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -45,7 +45,7 @@ CREATE TABLE user_profiles (
     interests TEXT[] DEFAULT '{}',
     address TEXT,
     society_id UUID REFERENCES societies(id) ON DELETE SET NULL,
-    society VARCHAR(200), -- Fallback field for society name
+    society VARCHAR(200),
     flat VARCHAR(50),
     avatar TEXT,
     bio TEXT,

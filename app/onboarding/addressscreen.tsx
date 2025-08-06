@@ -3,63 +3,42 @@ import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    Dimensions,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useUser } from "../../contexts/UserContext";
+import { societyService, stateService } from "../../lib/supabase";
 
 SplashScreen.preventAutoHideAsync();
 const { height } = Dimensions.get("window");
 
-// Hardcoded states since the table doesn't exist yet
-const states = [
-  { id: "1", name: "Delhi", code: "DL" },
-  { id: "2", name: "Mumbai", code: "MH" },
-  { id: "3", name: "Bangalore", code: "KA" },
-  { id: "4", name: "Noida", code: "UP" },
-  { id: "5", name: "Gurgaon", code: "HR" },
-  { id: "6", name: "Pune", code: "MH" },
-  { id: "7", name: "Hyderabad", code: "TS" },
-  { id: "8", name: "Chennai", code: "TN" },
-  { id: "9", name: "Kolkata", code: "WB" },
-  { id: "10", name: "Ahmedabad", code: "GJ" },
-];
 
-// Sample societies for each state
-const societiesByState = {
-  "Noida": ["Eldeco Utopia", "Palm Greens", "Supertech Ecovillage", "Jaypee Greens"],
-  "Gurgaon": ["DLF Phase 1", "Suncity Township", "Palm Springs"],
-  "Delhi": ["Vasant Vihar", "Greater Kailash", "Saket"],
-  "Mumbai": ["Bandra West", "Juhu", "Powai"],
-  "Bangalore": ["Koramangala", "Indiranagar", "Whitefield"],
-  "Pune": ["Koregaon Park", "Baner", "Kharadi"],
-  "Hyderabad": ["Banjara Hills", "Jubilee Hills", "Gachibowli"],
-  "Chennai": ["T Nagar", "Adyar", "Anna Nagar"],
-  "Kolkata": ["Park Street", "Salt Lake", "New Town"],
-  "Ahmedabad": ["Satellite", "Vastrapur", "Navrangpura"],
-};
 
 export default function AddressScreen() {
   const router = useRouter();
   const { user, updateUserProfile } = useUser();
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [society, setSociety] = useState(user?.society || "");
-  const [flat, setFlat] = useState(user?.flat || "");
+  const [society, setSociety] = useState("");
+  const [flat, setFlat] = useState("");
   const [selectedState, setSelectedState] = useState<any>(null);
+  const [selectedSociety, setSelectedSociety] = useState<any>(null);
   const [societySearch, setSocietySearch] = useState("");
   const [showStateDropdown, setShowStateDropdown] = useState(false);
   const [showSocietyDropdown, setShowSocietyDropdown] = useState(false);
-  const [filteredSocieties, setFilteredSocieties] = useState<string[]>([]);
+  const [filteredSocieties, setFilteredSocieties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [states, setStates] = useState<any[]>([]);
+  const [societies, setSocieties] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadFonts() {
@@ -80,58 +59,113 @@ export default function AddressScreen() {
     loadFonts();
   }, []);
 
+  // Load states and societies from database
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setIsLoadingData(true);
+        
+        // Load states (using the correct UUID for India)
+        const statesData = await stateService.getStatesByCountry("550e8400-e29b-41d4-a716-446655440001");
+        setStates(statesData);
+        
+        // Load all societies
+        const societiesData = await societyService.getAllSocieties();
+        setSocieties(societiesData);
+        
+      } catch (error) {
+        console.error("Error loading states/societies:", error);
+        // Fallback to hardcoded data if database fails
+        setStates([
+          { id: "550e8400-e29b-41d4-a716-446655440002", name: "Delhi", code: "DL" },
+          { id: "550e8400-e29b-41d4-a716-446655440003", name: "Maharashtra", code: "MH" },
+          { id: "550e8400-e29b-41d4-a716-446655440004", name: "Karnataka", code: "KA" },
+          { id: "550e8400-e29b-41d4-a716-446655440005", name: "Uttar Pradesh", code: "UP" },
+          { id: "550e8400-e29b-41d4-a716-446655440006", name: "Haryana", code: "HR" },
+          { id: "550e8400-e29b-41d4-a716-446655440007", name: "Telangana", code: "TS" },
+          { id: "550e8400-e29b-41d4-a716-446655440008", name: "Tamil Nadu", code: "TN" },
+          { id: "550e8400-e29b-41d4-a716-446655440009", name: "West Bengal", code: "WB" },
+          { id: "550e8400-e29b-41d4-a716-446655440010", name: "Gujarat", code: "GJ" },
+          { id: "550e8400-e29b-41d4-a716-446655440011", name: "Punjab", code: "PB" },
+        ]);
+      } finally {
+        setIsLoadingData(false);
+      }
+    }
+
+    loadData();
+  }, []);
+
   useEffect(() => {
     if (societySearch.trim()) {
       filterSocieties();
     } else if (selectedState) {
-      setFilteredSocieties(societiesByState[selectedState.name] || []);
+      const stateSocieties = societies.filter(society => 
+        society.state_id === selectedState.id || 
+        society.states?.name === selectedState.name
+      );
+      setFilteredSocieties(stateSocieties);
     }
-  }, [societySearch, selectedState]);
+  }, [societySearch, selectedState, societies]);
 
   const filterSocieties = () => {
     if (!selectedState) return;
     
-    const stateSocieties = societiesByState[selectedState.name] || [];
+    const stateSocieties = societies.filter(society => 
+      society.state_id === selectedState.id || 
+      society.states?.name === selectedState.name
+    );
     const filtered = stateSocieties.filter(society =>
-      society.toLowerCase().includes(societySearch.toLowerCase())
+      society.name.toLowerCase().includes(societySearch.toLowerCase())
     );
     setFilteredSocieties(filtered);
   };
 
   const handleStateSelect = (state: any) => {
     setSelectedState(state);
-    setSocietySearch("");
+    setSelectedSociety(null);
     setSociety("");
+    setSocietySearch("");
     setShowStateDropdown(false);
-    setFilteredSocieties(societiesByState[state.name] || []);
+    setShowSocietyDropdown(true);
   };
 
-  const handleSocietySelect = (societyName: string) => {
-    setSociety(societyName);
-    setSocietySearch(societyName);
+  const handleSocietySelect = (societyData: any) => {
+    setSociety(societyData.name);
+    setSelectedSociety(societyData);
     setShowSocietyDropdown(false);
   };
 
-  const handleCreateNewSociety = () => {
-    if (!selectedState || !societySearch.trim()) {
-      Alert.alert("Error", "Please select a state and enter a society name");
-      return;
+  const handleCreateNewSociety = async () => {
+    if (societySearch.trim() && selectedState) {
+      try {
+        // Create new society in database
+        const newSociety = await societyService.createSociety({
+          state_id: selectedState.id,
+          name: societySearch.trim(),
+          address: ""
+        });
+        
+        setSociety(newSociety.name);
+        setSelectedSociety(newSociety);
+        setShowSocietyDropdown(false);
+        
+        // Refresh societies list
+        const updatedSocieties = await societyService.getAllSocieties();
+        setSocieties(updatedSocieties);
+      } catch (error) {
+        console.error("Error creating society:", error);
+        Alert.alert("Error", "Failed to create new society");
+      }
     }
-
-    // Add the new society to the list
-    if (!societiesByState[selectedState.name]) {
-      societiesByState[selectedState.name] = [];
-    }
-    societiesByState[selectedState.name].push(societySearch.trim());
-    
-    setSociety(societySearch.trim());
-    setShowSocietyDropdown(false);
-    Alert.alert("Success", `Created new society "${societySearch.trim()}" in ${selectedState.name}`);
   };
 
   const validateSociety = (society: string) => {
     if (!society.trim()) {
-      return "Please enter your society name";
+      return "Please select or enter your society name";
+    }
+    if (society.trim().length < 2) {
+      return "Society name must be at least 2 characters long";
     }
     return "";
   };
@@ -139,6 +173,9 @@ export default function AddressScreen() {
   const validateFlat = (flat: string) => {
     if (!flat.trim()) {
       return "Please enter your flat number";
+    }
+    if (flat.trim().length < 1) {
+      return "Flat number is required";
     }
     return "";
   };
@@ -148,37 +185,35 @@ export default function AddressScreen() {
     const flatError = validateFlat(flat);
 
     const newErrors: {[key: string]: string} = {};
-    if (!selectedState) newErrors.state = "Please select a region";
     if (societyError) newErrors.society = societyError;
     if (flatError) newErrors.flat = flatError;
 
     setErrors(newErrors);
 
-    if (!selectedState || societyError || flatError) {
+    if (societyError || flatError) {
+      return;
+    }
+
+    if (!selectedState) {
+      Alert.alert("Error", "Please select your state");
       return;
     }
 
     setIsLoading(true);
     try {
-      console.log('Updating address with:', { 
-        society: society.trim(), 
-        flat: flat.trim(),
-        state_name: selectedState?.name,
-        society_name: society.trim()
-      });
+      // For now, just save the society name and flat
+      // We'll update the user's society_id later when we have the proper database setup
       await updateUserProfile({
         society: society.trim(),
         flat: flat.trim(),
-        state_name: selectedState?.name,
-        society_name: society.trim()
+        society_id: selectedSociety?.id || null,
+        state_id: selectedState.id
       });
-      console.log('Address updated successfully');
+      
       router.push("/onboarding/interestscreen");
     } catch (error) {
-      console.error('Error updating address:', error);
-      // Don't show alert, just log the error and continue
-      console.log('Continuing despite error...');
-      router.push("/onboarding/interestscreen");
+      console.error('Error saving address:', error);
+      Alert.alert("Error", "Failed to save address information");
     } finally {
       setIsLoading(false);
     }
@@ -259,16 +294,16 @@ export default function AddressScreen() {
             {showSocietyDropdown && selectedState && (
               <View style={styles.societyDropdownList}>
                 <ScrollView style={styles.dropdownScroll}>
-                  {filteredSocieties.map((societyName, index) => (
+                  {filteredSocieties.map((societyData, index) => (
                     <TouchableOpacity
-                      key={index}
+                      key={societyData.id || index}
                       style={styles.dropdownItem}
-                      onPress={() => handleSocietySelect(societyName)}
+                      onPress={() => handleSocietySelect(societyData)}
                     >
-                      <Text style={styles.dropdownItemText}>{societyName}</Text>
+                      <Text style={styles.dropdownItemText}>{societyData.name}</Text>
                     </TouchableOpacity>
                   ))}
-                  {societySearch.trim() && !filteredSocieties.some(s => s.toLowerCase() === societySearch.toLowerCase()) && (
+                  {societySearch.trim() && !filteredSocieties.some(s => s.name.toLowerCase() === societySearch.toLowerCase()) && (
                     <TouchableOpacity
                       style={[styles.dropdownItem, styles.createNewItem]}
                       onPress={handleCreateNewSociety}

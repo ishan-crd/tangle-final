@@ -55,16 +55,16 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       // If user doesn't have an ID yet, we need to create the profile first
       if (!user.id) {
         const newUser = await userService.createUserProfile({
-          name: user.name,
-          age: user.age,
-          phone: user.phone,
+          name: user.name || '',
+          age: user.age || 0,
+          phone: user.phone || '',
           interests: user.interests || [],
           address: user.address || '',
           society: user.society || '',
           flat: user.flat || '',
           avatar: user.avatar || '',
           bio: user.bio || '',
-          gender: user.gender || '',
+          gender: user.gender || ''
         });
         
         const updatedUser = { ...newUser, ...updates };

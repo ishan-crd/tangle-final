@@ -13,7 +13,7 @@ import {
     View,
 } from "react-native";
 import { useUser } from "../../../contexts/UserContext";
-import { matchService, postService, supabase } from "../../../lib/supabase";
+import { matchService, postService } from "../../../lib/supabase";
 
 const { width, height } = Dimensions.get("window");
 
@@ -40,29 +40,7 @@ export default function AddScreen() {
   };
 
   const getSocietyId = async () => {
-    if (user?.state_id && user?.society_id) {
-      return user.society_id;
-    }
-    
-    // Fallback - try to find by name
-    if (user?.state_name && user?.society_name) {
-      try {
-        const { data: society, error } = await supabase
-          .from('societies')
-          .select('*')
-          .eq('name', user.society_name)
-          .eq('state_id', user.state_id)
-          .single();
-        
-        if (!error && society) {
-          return society.id;
-        }
-      } catch (error) {
-        console.error('Error getting society:', error);
-      }
-    }
-    
-    return null;
+    return user?.society || null;
   };
 
   const handleCreatePost = async () => {
@@ -79,6 +57,10 @@ export default function AddScreen() {
     setIsPosting(true);
     try {
       const societyId = await getSocietyId();
+      if (!societyId) {
+        Alert.alert("Error", "Please complete your profile to create posts");
+        return;
+      }
       
       await postService.createPost({
         user_id: user.id,
@@ -117,15 +99,10 @@ export default function AddScreen() {
     setIsCreatingMatch(true);
     try {
       const societyId = await getSocietyId();
-      
-      // Get a sport ID (use Basketball as default)
-      const { data: sports, error: sportsError } = await supabase
-        .from('sports')
-        .select('*')
-        .eq('name', 'Basketball')
-        .single();
-      
-      const sportId = sports?.id || "sample-sport-id";
+      if (!societyId) {
+        Alert.alert("Error", "Please complete your profile to create matches");
+        return;
+      }
 
       // Create match
       const match = await matchService.createMatch({

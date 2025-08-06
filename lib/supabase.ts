@@ -1,29 +1,39 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://lrqrxyqrmwrbsxgiyuio.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycXJ4eXFybXdyYnN4Z2l5dWlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDI5MDgsImV4cCI6MjA2OTc3ODkwOH0.2wjV1fNp2oRxzlbHd5pZNVfOzHrNI5Q-s6-Rc3Qdoq4';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycXJ4eXFybXdyYnN4Z2l5dWlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDI5MDgsImV4cCI6MjA2OTc3ODkwOH0.2wjV1fNp2oRxzlbHd5pZNVfOzHrNI5Q-s6-Rc3Qdoq4';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
-export interface State {
+// Database Interfaces
+export interface Country {
   id: string;
   name: string;
   code: string;
-  country: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface State {
+  id: string;
+  country_id: string;
+  name: string;
+  code: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface Society {
   id: string;
-  name: string;
   state_id: string;
-  description?: string;
+  name: string;
   address?: string;
-  city?: string;
-  pincode?: string;
   created_at: string;
   updated_at: string;
+  states?: {
+    name: string;
+    code: string;
+  };
 }
 
 export interface UserProfile {
@@ -33,6 +43,8 @@ export interface UserProfile {
   phone: string;
   interests: string[];
   address: string;
+  society_id?: string;
+  state_id?: string;
   society: string;
   flat: string;
   avatar?: string;
@@ -40,33 +52,14 @@ export interface UserProfile {
   gender?: string;
   user_role?: 'super_admin' | 'society_admin' | 'public';
   is_active?: boolean;
-  state_id?: string;
-  society_id?: string;
-  state_name?: string;
-  society_name?: string;
   created_at: string;
   updated_at: string;
-}
-
-export interface Community {
-  id: string;
-  name: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface SocietyMember {
-  id: string;
-  society_id: string;
-  user_id: string;
-  role: 'admin' | 'member';
-  joined_at: string;
 }
 
 export interface Post {
   id: string;
   user_id: string;
+  society_id?: string;
   title?: string;
   content: string;
   post_type: 'general' | 'match' | 'tournament' | 'announcement';
@@ -82,18 +75,12 @@ export interface Post {
   };
 }
 
-export interface Sport {
-  id: string;
-  name: string;
-  description?: string;
-  created_at: string;
-}
-
 export interface Match {
   id: string;
   title: string;
   description: string;
   host_id: string;
+  society_id?: string;
   match_type: 'casual' | 'competitive';
   max_participants?: number;
   current_participants: number;
@@ -105,30 +92,21 @@ export interface Match {
   updated_at: string;
 }
 
-export interface Tournament {
+export interface MatchParticipant {
   id: string;
-  name: string;
-  description: string;
-  host_id: string;
-  state_id: string;
-  society_id: string;
-  sport_id: string;
-  max_teams: number;
-  current_teams: number;
-  venue: string;
-  start_date: string;
-  end_date: string;
-  prize_pool?: number;
-  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
-  created_at: string;
-  updated_at: string;
+  match_id: string;
+  user_id: string;
+  joined_at: string;
+  user_profiles?: {
+    name: string;
+    avatar?: string;
+  };
 }
 
 export interface Story {
   id: string;
   user_id: string;
-  state_id: string;
-  society_id: string;
+  society_id?: string;
   content: string;
   media_url?: string;
   expires_at: string;
@@ -145,12 +123,63 @@ export interface Notification {
   created_at: string;
 }
 
+export interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Like {
+  id: string;
+  post_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+// Country Service
+export const countryService = {
+  async getAllCountries(): Promise<Country[]> {
+    const { data, error } = await supabase
+      .from('countries')
+      .select('*')
+      .order('name');
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getCountryById(id: string): Promise<Country | null> {
+    const { data, error } = await supabase
+      .from('countries')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
+};
+
 // State Service
 export const stateService = {
   async getAllStates(): Promise<State[]> {
     const { data, error } = await supabase
       .from('states')
       .select('*')
+      .order('name');
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getStatesByCountry(countryId: string): Promise<State[]> {
+    const { data, error } = await supabase
+      .from('states')
+      .select('*')
+      .eq('country_id', countryId)
       .order('name');
     
     if (error) throw error;
@@ -187,7 +216,7 @@ export const societyService = {
       .from('societies')
       .select(`
         *,
-        states!inner(name, code)
+        states(name, code)
       `)
       .order('name');
     
@@ -200,7 +229,7 @@ export const societyService = {
       .from('societies')
       .select(`
         *,
-        states!inner(name, code)
+        states(name, code)
       `)
       .eq('state_id', stateId)
       .order('name');
@@ -210,21 +239,20 @@ export const societyService = {
   },
 
   async searchSocieties(query: string, stateId?: string): Promise<Society[]> {
-    let supabaseQuery = supabase
+    let queryBuilder = supabase
       .from('societies')
       .select(`
         *,
-        states!inner(name, code)
+        states(name, code)
       `)
       .ilike('name', `%${query}%`)
-      .order('name')
-      .limit(10);
+      .order('name');
     
     if (stateId) {
-      supabaseQuery = supabaseQuery.eq('state_id', stateId);
+      queryBuilder = queryBuilder.eq('state_id', stateId);
     }
     
-    const { data, error } = await supabaseQuery;
+    const { data, error } = await queryBuilder;
     
     if (error) throw error;
     return data || [];
@@ -235,7 +263,7 @@ export const societyService = {
       .from('societies')
       .select(`
         *,
-        states!inner(name, code)
+        states(name, code)
       `)
       .eq('id', id)
       .single();
@@ -245,19 +273,19 @@ export const societyService = {
   },
 
   async getSocietyByName(name: string, stateId?: string): Promise<Society | null> {
-    let supabaseQuery = supabase
+    let queryBuilder = supabase
       .from('societies')
       .select(`
         *,
-        states!inner(name, code)
+        states(name, code)
       `)
       .eq('name', name);
     
     if (stateId) {
-      supabaseQuery = supabaseQuery.eq('state_id', stateId);
+      queryBuilder = queryBuilder.eq('state_id', stateId);
     }
     
-    const { data, error } = await supabaseQuery.single();
+    const { data, error } = await queryBuilder.single();
     
     if (error) throw error;
     return data;
@@ -267,10 +295,7 @@ export const societyService = {
     const { data, error } = await supabase
       .from('societies')
       .insert([society])
-      .select(`
-        *,
-        states!inner(name, code)
-      `)
+      .select()
       .single();
     
     if (error) throw error;
@@ -278,20 +303,16 @@ export const societyService = {
   },
 
   async getOrCreateSociety(name: string, stateId: string): Promise<Society> {
-    // First try to find existing society in the specific state
-    const existingSociety = await this.getSocietyByName(name, stateId);
-    if (existingSociety) {
-      return existingSociety;
+    try {
+      const existing = await this.getSocietyByName(name, stateId);
+      if (existing) return existing;
+    } catch (error) {
+      // Society doesn't exist, create it
     }
-
-    // Create new society if it doesn't exist
+    
     return await this.createSociety({
       name,
-      state_id: stateId,
-      description: `${name} - Residential Society`,
-      address: '',
-      city: '',
-      pincode: ''
+      state_id: stateId
     });
   }
 };
@@ -301,10 +322,7 @@ export const userService = {
   async createUserProfile(profile: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>): Promise<UserProfile> {
     const { data, error } = await supabase
       .from('user_profiles')
-      .insert([{
-        ...profile,
-        // Don't include is_active and user_role - let database use defaults
-      }])
+      .insert([profile])
       .select()
       .single();
     
@@ -346,24 +364,46 @@ export const userService = {
     return data;
   },
 
-  async updateUserSociety(userId: string, stateName: string, societyName: string): Promise<UserProfile> {
-    // Get state
-    const state = await stateService.getStateByName(stateName);
-    if (!state) {
-      throw new Error(`State "${stateName}" not found`);
-    }
-
-    // Get or create society
-    const society = await societyService.getOrCreateSociety(societyName, state.id);
+  async getUsersBySociety(societyName: string): Promise<UserProfile[]> {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('society', societyName)
+      .order('name');
     
-    // Update user profile
-    return await this.updateUserProfile(userId, {
-      society: societyName,
-      state_id: state.id,
-      society_id: society.id,
-      state_name: state.name,
-      society_name: society.name
-    });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async updateUserSociety(userId: string, stateName: string, societyName: string): Promise<UserProfile> {
+    try {
+      // Get the society ID if it exists
+      let societyId = null;
+      try {
+        const society = await societyService.getSocietyByName(societyName);
+        if (society) {
+          societyId = society.id;
+        }
+      } catch (error) {
+        // Society doesn't exist, we'll just use the name
+      }
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update({
+          society: societyName,
+          society_id: societyId
+        })
+        .eq('id', userId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating user society:', error);
+      throw error;
+    }
   }
 };
 
@@ -385,7 +425,7 @@ export const postService = {
       .from('posts')
       .select(`
         *,
-        user_profiles!inner(name, avatar)
+        user_profiles(name, avatar)
       `)
       .eq('society_id', societyId)
       .order('created_at', { ascending: false });
@@ -394,10 +434,29 @@ export const postService = {
     return data || [];
   },
 
-  async getPostsBySocietyName(stateName: string, societyName: string): Promise<Post[]> {
+  async getPostsBySocietyName(societyName: string): Promise<Post[]> {
     try {
-      // Since we don't have proper state/society relationships, just return all posts
-      // Users can see all posts for now
+      // First try to get posts by society_id if society exists
+      const society = await societyService.getSocietyByName(societyName);
+      if (society) {
+        const { data, error } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            user_profiles(name, avatar)
+          `)
+          .eq('society_id', society.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching posts by society_id:', error);
+          return [];
+        }
+        
+        return data || [];
+      }
+      
+      // Fallback: Get posts by society name in content
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -411,11 +470,59 @@ export const postService = {
         return [];
       }
       
-      return data || [];
+      // Filter posts that contain the society name in content
+      const filteredPosts = (data || []).filter(post => 
+        post.content && post.content.toLowerCase().includes(societyName.toLowerCase())
+      );
+      
+      return filteredPosts;
     } catch (error) {
       console.error('Error in getPostsBySocietyName:', error);
       return [];
     }
+  },
+
+  async getUserPosts(userId: string): Promise<Post[]> {
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`
+        *,
+        user_profiles(name, avatar)
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async likePost(postId: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('likes')
+      .insert([{ post_id: postId, user_id: userId }]);
+    
+    if (error) throw error;
+  },
+
+  async unlikePost(postId: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('likes')
+      .delete()
+      .eq('post_id', postId)
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+  },
+
+  async addComment(postId: string, userId: string, content: string): Promise<Comment> {
+    const { data, error } = await supabase
+      .from('comments')
+      .insert([{ post_id: postId, user_id: userId, content }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
   }
 };
 
@@ -438,6 +545,40 @@ export const matchService = {
       .select('*')
       .eq('society_id', societyId)
       .order('scheduled_date');
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async joinMatch(matchId: string, userId: string): Promise<MatchParticipant> {
+    const { data, error } = await supabase
+      .from('match_participants')
+      .insert([{ match_id: matchId, user_id: userId }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async leaveMatch(matchId: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('match_participants')
+      .delete()
+      .eq('match_id', matchId)
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+  },
+
+  async getMatchParticipants(matchId: string): Promise<MatchParticipant[]> {
+    const { data, error } = await supabase
+      .from('match_participants')
+      .select(`
+        *,
+        user_profiles(name, avatar)
+      `)
+      .eq('match_id', matchId);
     
     if (error) throw error;
     return data || [];
@@ -492,5 +633,14 @@ export const notificationService = {
     
     if (error) throw error;
     return data || [];
+  },
+
+  async markNotificationAsRead(notificationId: string): Promise<void> {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId);
+    
+    if (error) throw error;
   }
 }; 

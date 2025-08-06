@@ -71,7 +71,7 @@ export default function AboutYou() {
         bio: bio.trim(),
       });
       console.log('Bio updated successfully');
-      router.push("/onboarding/notifications");
+      router.push("/onboarding/EmojiAvatarScreen");
     } catch (error) {
       console.error('Error updating bio:', error);
       Alert.alert("Error", "Failed to save bio");

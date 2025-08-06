@@ -1,5 +1,6 @@
+import { createClient } from '@supabase/supabase-js';
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -10,6 +11,9 @@ import {
   View,
 } from "react-native";
 import { useUser } from "../../../contexts/UserContext";
+import { Post } from "../../../lib/supabase";
+
+const supabase = createClient('https://lrqrxyqrmwrbsxgiyuio.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycXJ4eXFybXdyYnN4Z2l5dWlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDI5MDgsImV4cCI6MjA2OTc3ODkwOH0.2wjV1fNp2oRxzlbHd5pZNVfOzHrNI5Q-s6-Rc3Qdoq4');
 
 const bestFriends = [
   {
@@ -38,6 +42,52 @@ export default function Profile() {
   const router = useRouter();
   const { user, logout } = useUser();
   const [activeTab, setActiveTab] = useState("Connections");
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === "Posts" && user?.id) {
+      loadUserPosts();
+    }
+  }, [activeTab, user?.id]);
+
+  const loadUserPosts = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoadingPosts(true);
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          user_profiles(name, avatar)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error loading user posts:', error);
+        return;
+      }
+      
+      setUserPosts(data || []);
+    } catch (error) {
+      console.error('Error loading user posts:', error);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 48) return "Yesterday";
+    return date.toLocaleDateString();
+  };
 
   const handleLogout = async () => {
     Alert.alert(
@@ -71,21 +121,28 @@ export default function Profile() {
         return (
           <View style={styles.tabContent}>
             <Text style={styles.tabTitle}>Your Posts</Text>
-            <View style={styles.postCard}>
-              <View style={styles.postHeader}>
-                <Image source={require("../../../assets/emojis/emoji7.png")} style={styles.postAvatar} />
-                <View>
-                  <Text style={styles.postAuthor}>You</Text>
-                  <Text style={styles.postTime}>2 hours ago</Text>
+            {loadingPosts ? (
+              <Text>Loading posts...</Text>
+            ) : userPosts.length === 0 ? (
+              <Text>No posts yet. Be the first to share!</Text>
+            ) : (
+              userPosts.map((post, index) => (
+                <View key={index} style={styles.postCard}>
+                  <View style={styles.postHeader}>
+                    <Image source={require("../../../assets/emojis/emoji7.png")} style={styles.postAvatar} />
+                    <View>
+                      <Text style={styles.postAuthor}>You</Text>
+                      <Text style={styles.postTime}>{formatDate(post.created_at)}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.postText}>{post.content}</Text>
+                  <View style={styles.postStats}>
+                    <Text style={styles.postStat}>❤️ {post.likes_count}</Text>
+                    <Text style={styles.postStat}>💬 {post.comments_count}</Text>
+                  </View>
                 </View>
-              </View>
-              <Text style={styles.postText}>Just finished an amazing workout! 💪</Text>
-              <View style={styles.postStats}>
-                <Text style={styles.postStat}>❤️ 24</Text>
-                <Text style={styles.postStat}>💬 8</Text>
-                <Text style={styles.postStat}>📤 3</Text>
-              </View>
-            </View>
+              ))
+            )}
           </View>
         );
       case "Stories":
