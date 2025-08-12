@@ -110,7 +110,7 @@ export default function OtpVerify() {
       Alert.alert("Success", "Phone number verified successfully!");
       
       // Check if user has completed onboarding (has name, age, etc.)
-      if (user?.name && user.name !== "Number User" && user.name !== "Apple User" && user.name !== "Google User") {
+      if (user?.name && user.name.trim() !== "") {
         // User has completed onboarding, go to main app
         router.push("/main");
       } else {

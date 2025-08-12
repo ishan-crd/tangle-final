@@ -3,16 +3,16 @@ import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import {
-  Alert,
-  Dimensions,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useUser } from "../../contexts/UserContext";
 
@@ -25,8 +25,8 @@ export default function ProfileBasic() {
   const router = useRouter();
   const { user, updateUserProfile } = useUser();
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [name, setName] = useState(user?.name || "");
-  const [age, setAge] = useState(user?.age?.toString() || "");
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -140,7 +140,7 @@ export default function ProfileBasic() {
           <Text style={styles.label}>What's your name or nickname?</Text>
           <TextInput
             style={[styles.input, errors.name && styles.inputError]}
-            placeholder="Enter your name"
+            placeholder="Full Name"
             value={name}
             onChangeText={(text) => {
               setName(text);
@@ -155,7 +155,7 @@ export default function ProfileBasic() {
           <Text style={styles.label}>How old are you?</Text>
           <TextInput
             style={[styles.input, errors.age && styles.inputError]}
-            placeholder="Enter your age"
+            placeholder="18"
             value={age}
             onChangeText={(text) => {
               // Only allow numbers

@@ -1,14 +1,100 @@
+import { useEffect, useState } from "react";
 import {
+    Alert,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
+import { useUser } from "../../../contexts/UserContext";
+import { Match, matchService } from "../../../lib/supabase";
 
 export default function SearchScreen() {
+  const { user } = useUser();
+  const [ongoingMatches, setOngoingMatches] = useState<Match[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    loadOngoingMatches();
+  }, [user]);
+
+  const loadOngoingMatches = async () => {
+    if (!user?.society_id) return;
+    
+    try {
+      setLoading(true);
+      const matches = await matchService.getMatchesBySociety(user.society_id);
+      // Filter for upcoming and ongoing matches
+      const activeMatches = matches.filter(match => 
+        match.status === 'upcoming' || match.status === 'ongoing'
+      );
+      setOngoingMatches(activeMatches);
+    } catch (error) {
+      console.error('Error loading ongoing matches:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadOngoingMatches();
+    setRefreshing(false);
+  };
+
+  const handleJoinMatch = async (matchId: string) => {
+    if (!user?.id) {
+      Alert.alert("Error", "Please log in to join matches");
+      return;
+    }
+
+    try {
+      await matchService.joinMatch(matchId, user.id);
+      Alert.alert("Success", "You've joined the match!");
+      // Refresh the matches list
+      loadOngoingMatches();
+    } catch (error) {
+      console.error('Error joining match:', error);
+      Alert.alert("Error", "Failed to join match. Please try again.");
+    }
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
+  const getMatchIcon = (matchType: string) => {
+    switch (matchType) {
+      case 'badminton':
+        return '🏸';
+      case 'basketball':
+        return '🏀';
+      case 'tennis':
+        return '🎾';
+      case 'football':
+        return '⚽';
+      case 'cricket':
+        return '🏏';
+      default:
+        return '🏃';
+    }
+  };
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Search</Text>
         <Text style={styles.subtitle}>Find people and activities</Text>
@@ -57,6 +143,51 @@ export default function SearchScreen() {
             <Text style={styles.recentText}>Tennis tournaments</Text>
           </TouchableOpacity>
         </View>
+      </View>
+
+      {/* Popular Activities Section */}
+      <View style={styles.popularSection}>
+        <Text style={styles.sectionTitle}>Popular Activities</Text>
+        
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading activities...</Text>
+          </View>
+        ) : ongoingMatches.length > 0 ? (
+          ongoingMatches.map((match) => (
+            <View key={match.id} style={styles.activityCard}>
+              <View style={styles.activityLeft}>
+                <Text style={styles.activityIcon}>{getMatchIcon(match.title.toLowerCase())}</Text>
+                <View style={styles.activityInfo}>
+                  <Text style={styles.activityTitle}>{match.title}</Text>
+                  <Text style={styles.activityLocation}>{match.venue}</Text>
+                  <View style={styles.activityTime}>
+                    <Text style={styles.timeIcon}>⏰</Text>
+                    <Text style={styles.timeText}>{formatTime(match.scheduled_date)}</Text>
+                  </View>
+                </View>
+              </View>
+              
+              <View style={styles.activityRight}>
+                <View style={styles.playerCount}>
+                  <Text style={styles.playerNumber}>{match.current_participants}</Text>
+                  <Text style={styles.playerLabel}>players</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.joinButton}
+                  onPress={() => handleJoinMatch(match.id)}
+                >
+                  <Text style={styles.joinButtonText}>Join Game</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        ) : (
+          <View style={styles.noActivitiesContainer}>
+            <Text style={styles.noActivitiesText}>No ongoing activities in your society</Text>
+            <Text style={styles.noActivitiesSubtext}>Create a match to get started!</Text>
+          </View>
+        )}
       </View>
     </ScrollView>
   );
@@ -150,5 +281,109 @@ const styles = StyleSheet.create({
   recentText: {
     fontSize: 16,
     color: "#333333",
+  },
+  // Popular Activities Section Styles
+  popularSection: {
+    padding: 20,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    padding: 20,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#666666",
+  },
+  activityCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  activityLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  activityIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  activityInfo: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333333",
+    marginBottom: 4,
+  },
+  activityLocation: {
+    fontSize: 14,
+    color: "#666666",
+    marginBottom: 4,
+  },
+  activityTime: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  timeIcon: {
+    fontSize: 14,
+    marginRight: 4,
+  },
+  timeText: {
+    fontSize: 14,
+    color: "#666666",
+  },
+  activityRight: {
+    alignItems: "flex-end",
+  },
+  playerCount: {
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  playerNumber: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#007AFF",
+  },
+  playerLabel: {
+    fontSize: 12,
+    color: "#666666",
+  },
+  joinButton: {
+    backgroundColor: "#007AFF",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  joinButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  noActivitiesContainer: {
+    alignItems: "center",
+    padding: 20,
+  },
+  noActivitiesText: {
+    fontSize: 16,
+    color: "#666666",
+    marginBottom: 4,
+  },
+  noActivitiesSubtext: {
+    fontSize: 14,
+    color: "#999999",
   },
 });

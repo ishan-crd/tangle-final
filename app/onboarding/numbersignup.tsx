@@ -135,7 +135,7 @@ export default function NumberSignup() {
         } else {
           // Create a new user with the phone number
           const mockUser = {
-            name: "Number User",
+            name: "",
             age: 0,
             phone: fullPhoneNumber,
             interests: [],

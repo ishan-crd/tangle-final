@@ -40,7 +40,7 @@ export default function AddScreen() {
   };
 
   const getSocietyId = async () => {
-    return user?.society || null;
+    return user?.society_id || null;
   };
 
   const handleCreatePost = async () => {
@@ -64,6 +64,7 @@ export default function AddScreen() {
       
       await postService.createPost({
         user_id: user.id,
+        society_id: societyId,
         title: postTitle.trim() || undefined,
         content: postContent.trim(),
         post_type: "general",
@@ -109,6 +110,7 @@ export default function AddScreen() {
         title: matchTitle.trim(),
         description: matchDescription.trim(),
         host_id: user.id,
+        society_id: societyId,
         match_type: "casual",
         max_participants: maxParticipants ? parseInt(maxParticipants) : undefined,
         current_participants: 0,
@@ -121,6 +123,7 @@ export default function AddScreen() {
       // Also create a post about the match
       await postService.createPost({
         user_id: user.id,
+        society_id: societyId,
         title: `🏀 ${matchTitle}`,
         content: `${matchDescription}\n\n📍 Venue: ${matchVenue}\n📅 Date: ${matchDate}\n⏰ Time: ${matchTime}\n👥 Max Participants: ${maxParticipants || 'Unlimited'}`,
         post_type: "match",

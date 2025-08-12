@@ -453,15 +453,18 @@ export const postService = {
           return [];
         }
         
-        return data || [];
+        // If we found posts by society_id, return them
+        if (data && data.length > 0) {
+          return data;
+        }
       }
       
-      // Fallback: Get posts by society name in content
+      // Fallback: Get posts by society name in content or by user's society
       const { data, error } = await supabase
         .from('posts')
         .select(`
           *,
-          user_profiles(name, avatar)
+          user_profiles(name, avatar, society)
         `)
         .order('created_at', { ascending: false });
       
@@ -470,10 +473,16 @@ export const postService = {
         return [];
       }
       
-      // Filter posts that contain the society name in content
-      const filteredPosts = (data || []).filter(post => 
-        post.content && post.content.toLowerCase().includes(societyName.toLowerCase())
-      );
+      // Filter posts by users who are in the same society
+      const filteredPosts = (data || []).filter(post => {
+        // Check if post content contains society name
+        const contentMatch = post.content && post.content.toLowerCase().includes(societyName.toLowerCase());
+        
+        // Check if the post author is in the same society
+        const authorSocietyMatch = post.user_profiles?.society === societyName;
+        
+        return contentMatch || authorSocietyMatch;
+      });
       
       return filteredPosts;
     } catch (error) {

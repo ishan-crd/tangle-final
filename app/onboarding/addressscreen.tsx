@@ -96,6 +96,31 @@ export default function AddressScreen() {
     loadData();
   }, []);
 
+  // Initialize fields with existing user data
+  useEffect(() => {
+    if (user && !isLoadingData) {
+      if (user.society) {
+        setSociety(user.society);
+        setSocietySearch(user.society);
+      }
+      if (user.flat) {
+        setFlat(user.flat);
+      }
+      if (user.state_id) {
+        const userState = states.find(state => state.id === user.state_id);
+        if (userState) {
+          setSelectedState(userState);
+        }
+      }
+      if (user.society_id) {
+        const userSociety = societies.find(society => society.id === user.society_id);
+        if (userSociety) {
+          setSelectedSociety(userSociety);
+        }
+      }
+    }
+  }, [user, states, societies, isLoadingData]);
+
   useEffect(() => {
     if (societySearch.trim()) {
       filterSocieties();
@@ -126,12 +151,14 @@ export default function AddressScreen() {
     setSelectedSociety(null);
     setSociety("");
     setSocietySearch("");
+    setFilteredSocieties([]);
     setShowStateDropdown(false);
     setShowSocietyDropdown(true);
   };
 
   const handleSocietySelect = (societyData: any) => {
     setSociety(societyData.name);
+    setSocietySearch(societyData.name);
     setSelectedSociety(societyData);
     setShowSocietyDropdown(false);
   };
@@ -147,6 +174,7 @@ export default function AddressScreen() {
         });
         
         setSociety(newSociety.name);
+        setSocietySearch(newSociety.name);
         setSelectedSociety(newSociety);
         setShowSocietyDropdown(false);
         
@@ -201,12 +229,34 @@ export default function AddressScreen() {
 
     setIsLoading(true);
     try {
-      // For now, just save the society name and flat
-      // We'll update the user's society_id later when we have the proper database setup
+      let finalSocietyId = selectedSociety?.id;
+      
+      // If no society was selected from dropdown but society name was entered,
+      // try to find the existing society or create a new one
+      if (!finalSocietyId && society.trim()) {
+        try {
+          const existingSociety = await societyService.getSocietyByName(society.trim());
+          if (existingSociety) {
+            finalSocietyId = existingSociety.id;
+          } else {
+            // Create new society if it doesn't exist
+            const newSociety = await societyService.createSociety({
+              state_id: selectedState.id,
+              name: society.trim(),
+              address: ""
+            });
+            finalSocietyId = newSociety.id;
+          }
+        } catch (error) {
+          console.error('Error finding/creating society:', error);
+          // Continue without society_id if there's an error
+        }
+      }
+      
       await updateUserProfile({
         society: society.trim(),
         flat: flat.trim(),
-        society_id: selectedSociety?.id || null,
+        society_id: finalSocietyId,
         state_id: selectedState.id
       });
       
@@ -278,7 +328,11 @@ export default function AddressScreen() {
               value={societySearch}
               onChangeText={(text) => {
                 setSocietySearch(text);
-                setSociety(text);
+                // Clear the selected society when user starts typing
+                if (selectedSociety) {
+                  setSelectedSociety(null);
+                  setSociety("");
+                }
                 if (errors.society) {
                   setErrors({...errors, society: ""});
                 }

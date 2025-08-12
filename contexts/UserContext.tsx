@@ -64,7 +64,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           flat: user.flat || '',
           avatar: user.avatar || '',
           bio: user.bio || '',
-          gender: user.gender || ''
+          gender: user.gender || '',
+          state_id: user.state_id || undefined
         });
         
         const updatedUser = { ...newUser, ...updates };

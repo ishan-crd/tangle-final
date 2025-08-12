@@ -48,7 +48,7 @@ export default function signupscreen() {
     try {
       // Create a user with minimal required data
       const mockUser = {
-        name: "Apple User",
+        name: "",
         age: 0, // Default age
         phone: "+1234567890",
         interests: [],
@@ -81,7 +81,7 @@ export default function signupscreen() {
     try {
       // Create a user with minimal required data
       const mockUser = {
-        name: "Google User",
+        name: "",
         age: 0, // Default age
         phone: "+1234567891",
         interests: [],

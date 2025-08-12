@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import {
+    Alert,
     Dimensions,
     RefreshControl,
     SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View,
 } from "react-native";
 import { useUser } from "../../../contexts/UserContext";
@@ -18,6 +20,8 @@ export default function HomeScreen() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [joinedMatches, setJoinedMatches] = useState<Set<string>>(new Set());
+  const [joiningMatches, setJoiningMatches] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadPosts();
@@ -30,7 +34,7 @@ export default function HomeScreen() {
         return;
       }
       
-      const postsData = await postService.getPostsBySocietyName('', user.society);
+      const postsData = await postService.getPostsBySocietyName(user.society);
       setPosts(postsData);
     } catch (error) {
       console.error('Error loading posts:', error);
@@ -58,6 +62,61 @@ export default function HomeScreen() {
 
   const getFirstName = (fullName: string) => {
     return fullName.split(' ')[0];
+  };
+
+  const handleJoinMatchFromPost = async (post: Post) => {
+    if (!user?.id) {
+      Alert.alert("Error", "Please log in to join matches");
+      return;
+    }
+
+    // Set loading state for this specific post
+    setJoiningMatches(prev => new Set(prev).add(post.id));
+
+    // Extract match information from post content
+    const matchTitle = post.title?.replace('🏀 ', '') || 'Match';
+    
+    // Try to extract more details from post content
+    const content = post.content;
+    let venue = "TBD";
+    let time = "TBD";
+    let maxParticipants = "Unlimited";
+    
+    // Extract venue
+    const venueMatch = content.match(/📍 Venue: (.+)/);
+    if (venueMatch) venue = venueMatch[1];
+    
+    // Extract time
+    const timeMatch = content.match(/⏰ Time: (.+)/);
+    if (timeMatch) time = timeMatch[1];
+    
+    // Extract max participants
+    const participantsMatch = content.match(/👥 Max Participants: (.+)/);
+    if (participantsMatch) maxParticipants = participantsMatch[1];
+    
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // TODO: Implement actual match joining logic
+      // For now, show success message and track locally
+      setJoinedMatches(prev => new Set(prev).add(post.id));
+      
+      Alert.alert(
+        "Success!", 
+        `You've joined "${matchTitle}"! 🎉\n\n📍 Venue: ${venue}\n⏰ Time: ${time}\n👥 Max Participants: ${maxParticipants}\n\nYou'll receive updates about the match.`,
+        [{ text: "Great!" }]
+      );
+    } catch (error) {
+      Alert.alert("Error", "Failed to join match. Please try again.");
+    } finally {
+      // Clear loading state
+      setJoiningMatches(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(post.id);
+        return newSet;
+      });
+    }
   };
 
   if (loading) {
@@ -181,9 +240,27 @@ export default function HomeScreen() {
                         Today at 5:00 PM
                       </Text>
                     </View>
-                    <View style={styles.joinButton}>
-                      <Text style={styles.joinButtonText}>Join</Text>
-                    </View>
+                    <TouchableOpacity 
+                      style={[
+                        styles.joinButton,
+                        joinedMatches.has(post.id) && styles.joinedButton
+                      ]}
+                      onPress={() => handleJoinMatchFromPost(post)}
+                      activeOpacity={0.8}
+                      disabled={joinedMatches.has(post.id) || joiningMatches.has(post.id)}
+                    >
+                      <Text style={[
+                        styles.joinButtonText,
+                        joinedMatches.has(post.id) && styles.joinedButtonText
+                      ]}>
+                        {joiningMatches.has(post.id) 
+                          ? 'Joining...' 
+                          : joinedMatches.has(post.id) 
+                            ? 'Joined ✓' 
+                            : 'Join'
+                        }
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>
@@ -401,12 +478,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   joinButtonText: {
     color: "white",
     fontSize: 14,
     fontWeight: "bold",
     fontFamily: "Montserrat-SemiBold",
+  },
+  joinedButton: {
+    backgroundColor: "#4CAF50",
+    opacity: 0.8,
+  },
+  joinedButtonText: {
+    color: "white",
   },
   emptyState: {
     flex: 1,
