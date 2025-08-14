@@ -1,127 +1,143 @@
+import { router } from "expo-router";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 
 export default function HubScreen() {
+  const handleTournamentsPress = () => {
+    router.push("/main/tournaments");
+  };
+
+  const handleCommunityEventsPress = () => {
+    router.push("/main/community-events");
+  };
+
+  const handleInterestCirclesPress = () => {
+    router.push("/main/interest-circles");
+  };
+
+  const InterestCirclesCard = () => (
+    <TouchableOpacity style={[styles.bottomCard, styles.interestCirclesCard]} onPress={handleInterestCirclesPress}>
+      <View style={styles.cardContent}>
+        <Text style={styles.cardIcon}>👥</Text>
+        <Text style={styles.cardTitle}>Interest Circles</Text>
+        <Text style={styles.cardSubtitle}>Connect with like-minded people</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Hub</Text>
-        <Text style={styles.subtitle}>Discover and connect</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+      {/* Search and Feature Buttons Section */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput 
+            style={styles.searchInput}
+            placeholder="Search"
+            placeholderTextColor="#666"
+          />
+        </View>
         
-        <View style={styles.actionGrid}>
-          <TouchableOpacity style={styles.actionCard}>
-            <Text style={styles.actionIcon}>🏢</Text>
-            <Text style={styles.actionTitle}>Societies</Text>
-            <Text style={styles.actionSubtitle}>Find nearby societies</Text>
+        <View style={styles.featureButtons}>
+          <TouchableOpacity style={[styles.featureButton, styles.lockedFeature]}>
+            <Text style={styles.lockIcon}>🔒</Text>
+            <Text style={styles.featureText}>Offers</Text>
+            <Text style={styles.featureEmoji}>🍔</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionCard}>
-            <Text style={styles.actionIcon}>👥</Text>
-            <Text style={styles.actionTitle}>Groups</Text>
-            <Text style={styles.actionSubtitle}>Join sports groups</Text>
+          <TouchableOpacity style={[styles.featureButton, styles.lockedFeature]}>
+            <Text style={styles.lockIcon}>🔒</Text>
+            <Text style={styles.featureText}>Polls</Text>
+            <Text style={styles.featureEmoji}>📊</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionCard}>
-            <Text style={styles.actionIcon}>🎯</Text>
-            <Text style={styles.actionTitle}>Challenges</Text>
-            <Text style={styles.actionSubtitle}>Participate in challenges</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionCard}>
-            <Text style={styles.actionIcon}>🏅</Text>
-            <Text style={styles.actionTitle}>Achievements</Text>
-            <Text style={styles.actionSubtitle}>View your badges</Text>
+          <TouchableOpacity style={[styles.featureButton, styles.lockedFeature]}>
+            <Text style={styles.lockIcon}>🔒</Text>
+            <Text style={styles.featureText}>Slot Books</Text>
+            <Text style={styles.featureEmoji}>✨</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Trending</Text>
-        
-        <View style={styles.trendingList}>
-          <View style={styles.trendingItem}>
-            <Text style={styles.trendingEmoji}>🔥</Text>
-            <View style={styles.trendingContent}>
-              <Text style={styles.trendingTitle}>Basketball Tournament</Text>
-              <Text style={styles.trendingSubtitle}>15 people joined</Text>
+      {/* Events and Tournaments Section */}
+      <View style={styles.eventsSection}>
+        <View style={styles.eventRow}>
+          <TouchableOpacity 
+            style={[styles.eventCard, styles.tournamentsCard]}
+            onPress={handleTournamentsPress}
+          >
+            <View style={styles.activeLabel}>
+              <Text style={styles.activeLabelText}>3 active tournaments</Text>
             </View>
-            <Text style={styles.trendingCount}>#1</Text>
-          </View>
+            <Text style={styles.eventTitle}>Tournaments</Text>
+            <Text style={styles.eventDescription}>Time to prove you're not just bragging in the WhatsApp group</Text>
+            <Text style={styles.eventIcon}>🏆</Text>
+          </TouchableOpacity>
           
-          <View style={styles.trendingItem}>
-            <Text style={styles.trendingEmoji}>🏸</Text>
-            <View style={styles.trendingContent}>
-              <Text style={styles.trendingTitle}>Badminton League</Text>
-              <Text style={styles.trendingSubtitle}>8 teams registered</Text>
+          <TouchableOpacity 
+            style={[styles.eventCard, styles.communityEventsCard]}
+            onPress={handleCommunityEventsPress}
+          >
+            <View style={styles.activeLabel}>
+              <Text style={styles.activeLabelText}>1 active event</Text>
             </View>
-            <Text style={styles.trendingCount}>#2</Text>
-          </View>
+            <Text style={styles.eventTitle}>Community Events</Text>
+            <Text style={styles.eventDescription}>Fun guaranteed your time back!</Text>
+            <View style={styles.globeContainer}>
+              <Text style={styles.globeIcon}>🌐</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Map Section (Locked) */}
+      <View style={styles.mapSection}>
+        <View style={styles.mapContainer}>
+          <ImageBackground 
+            source={require('../../../assets/images/map.jpg')} 
+            style={styles.mapContent}
+            resizeMode="cover"
+          >
+            {/* Location Marker */}
+            <View style={styles.locationMarker}>
+              <View style={styles.markerDot}></View>
+              <View style={styles.markerPulse}></View>
+            </View>
+            
+            {/* Location Info Bubble */}
+            <View style={styles.locationBubble}>
+              <Text style={styles.locationBubbleText}>From 562/11-A</Text>
+            </View>
+          </ImageBackground>
           
-          <View style={styles.trendingItem}>
-            <Text style={styles.trendingEmoji}>🎾</Text>
-            <View style={styles.trendingContent}>
-              <Text style={styles.trendingTitle}>Tennis Doubles</Text>
-              <Text style={styles.trendingSubtitle}>12 players online</Text>
-            </View>
-            <Text style={styles.trendingCount}>#3</Text>
+          {/* Lock Overlay */}
+          <View style={styles.mapLockOverlay}>
+            <Text style={styles.mapLockIcon}>🔒</Text>
+            <Text style={styles.mapLockText}>Map Feature</Text>
+            <Text style={styles.mapLockSubtext}>Coming Soon</Text>
           </View>
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Nearby Activities</Text>
-        
-        <View style={styles.activityList}>
-          <View style={styles.activityCard}>
-            <View style={styles.activityHeader}>
-              <Text style={styles.activityEmoji}>🏀</Text>
-              <View style={styles.activityInfo}>
-                <Text style={styles.activityTitle}>Basketball Court</Text>
-                <Text style={styles.activityLocation}>500m away</Text>
-              </View>
-              <View style={styles.activityStats}>
-                <Text style={styles.participantCount}>8</Text>
-                <Text style={styles.participantLabel}>players</Text>
-              </View>
-            </View>
-          </View>
+      {/* Interest Circles and Announcements Section */}
+      <View style={styles.bottomSection}>
+        <View style={styles.bottomRow}>
+          <InterestCirclesCard />
           
-          <View style={styles.activityCard}>
-            <View style={styles.activityHeader}>
-              <Text style={styles.activityEmoji}>🏸</Text>
-              <View style={styles.activityInfo}>
-                <Text style={styles.activityTitle}>Badminton Court</Text>
-                <Text style={styles.activityLocation}>1km away</Text>
-              </View>
-              <View style={styles.activityStats}>
-                <Text style={styles.participantCount}>4</Text>
-                <Text style={styles.participantLabel}>players</Text>
-              </View>
+          <TouchableOpacity style={[styles.bottomCard, styles.announcementsCard]}>
+            <Text style={styles.bottomCardTitle}>Announcements</Text>
+            <Text style={styles.bottomCardDescription}>Society news that actually matters</Text>
+            <View style={styles.lockedContent}>
+              <Text style={styles.largeLockIcon}>🔒</Text>
             </View>
-          </View>
-          
-          <View style={styles.activityCard}>
-            <View style={styles.activityHeader}>
-              <Text style={styles.activityEmoji}>🎾</Text>
-              <View style={styles.activityInfo}>
-                <Text style={styles.activityTitle}>Tennis Court</Text>
-                <Text style={styles.activityLocation}>2km away</Text>
-              </View>
-              <View style={styles.activityStats}>
-                <Text style={styles.participantCount}>2</Text>
-                <Text style={styles.participantLabel}>players</Text>
-              </View>
-            </View>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
     </ScrollView>
@@ -131,155 +147,280 @@ export default function HubScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F8F9FA",
+    paddingTop: 50, // Add top padding for status bar
+  },
+  
+  // Search Section
+  searchSection: {
+    padding: 20,
     backgroundColor: "#FFFFFF",
   },
-  header: {
-    padding: 20,
-    backgroundColor: "#F8F9FA",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#333333",
-    marginBottom: 5,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#666666",
-  },
-  section: {
-    padding: 20,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333333",
-    marginBottom: 15,
-  },
-  actionGrid: {
+  searchContainer: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
+    backgroundColor: "#E8F5E8",
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    marginBottom: 20,
+  },
+  searchIcon: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
+  },
+  featureButtons: {
+    flexDirection: "row",
     justifyContent: "space-between",
   },
-  actionCard: {
-    width: "48%",
-    backgroundColor: "#FFFFFF",
+  featureButton: {
+    flex: 1,
+    backgroundColor: "#F0F0F0",
     borderRadius: 12,
-    padding: 20,
-    marginBottom: 15,
+    padding: 15,
+    marginHorizontal: 5,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
-  actionIcon: {
+  lockedFeature: {
+    opacity: 0.6,
+  },
+  lockIcon: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  featureText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#666",
+    marginBottom: 5,
+  },
+  featureEmoji: {
+    fontSize: 16,
+  },
+  
+  // Events Section
+  eventsSection: {
+    padding: 20,
+  },
+  eventRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  eventCard: {
+    width: "48%",
+    aspectRatio: 1, // Make cards square
+    borderRadius: 16,
+    padding: 15,
+    marginHorizontal: 5,
+    justifyContent: "space-between",
+  },
+  tournamentsCard: {
+    backgroundColor: "#FFE4D6",
+  },
+  communityEventsCard: {
+    backgroundColor: "#F0F0F0",
+  },
+  activeLabel: {
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+    alignSelf: "flex-start",
+  },
+  activeLabelText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "600",
+  },
+  eventTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginVertical: 8,
+  },
+  eventDescription: {
+    fontSize: 11,
+    color: "#666",
+    lineHeight: 16,
+    marginBottom: 8,
+  },
+  eventIcon: {
+    fontSize: 28,
+    textAlign: "center",
+  },
+  lockedContent: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+  },
+  largeLockIcon: {
+    fontSize: 40,
+    marginBottom: 8,
+  },
+  globeIcon: {
     fontSize: 32,
+    textAlign: "center",
+  },
+  globeContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+  },
+  
+  // Map Section
+  mapSection: {
+    padding: 20,
+  },
+  mapContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    overflow: "hidden",
+    position: "relative",
+  },
+  mapContent: {
+    width: "100%",
+    height: 200,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  locationMarker: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginLeft: -10,
+    marginTop: -10,
+  },
+  markerDot: {
+    width: 20,
+    height: 20,
+    backgroundColor: "#000",
+    borderRadius: 10,
+    position: "absolute",
+    zIndex: 2,
+  },
+  markerPulse: {
+    width: 40,
+    height: 40,
+    backgroundColor: "#2196F3",
+    borderRadius: 20,
+    opacity: 0.3,
+    position: "absolute",
+    marginLeft: -10,
+    marginTop: -10,
+  },
+  locationBubble: {
+    position: "absolute",
+    top: "40%",
+    right: "20%",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  locationBubbleText: {
+    fontSize: 12,
+    color: "#333",
+    fontWeight: "500",
+  },
+  mapLockOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mapLockIcon: {
+    fontSize: 48,
     marginBottom: 10,
   },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333333",
-    marginBottom: 5,
-    textAlign: "center",
-  },
-  actionSubtitle: {
-    fontSize: 12,
-    color: "#666666",
-    textAlign: "center",
-  },
-  trendingList: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  trendingItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  trendingEmoji: {
-    fontSize: 24,
-    marginRight: 15,
-  },
-  trendingContent: {
-    flex: 1,
-  },
-  trendingTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333333",
-  },
-  trendingSubtitle: {
-    fontSize: 14,
-    color: "#666666",
-  },
-  trendingCount: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#3575EC",
-  },
-  activityList: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  activityCard: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  activityHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  activityEmoji: {
-    fontSize: 24,
-    marginRight: 15,
-  },
-  activityInfo: {
-    flex: 1,
-  },
-  activityTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333333",
-  },
-  activityLocation: {
-    fontSize: 14,
-    color: "#666666",
-  },
-  activityStats: {
-    alignItems: "center",
-  },
-  participantCount: {
+  mapLockText: {
+    color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "bold",
-    color: "#3575EC",
+    marginBottom: 5,
   },
-  participantLabel: {
-    fontSize: 10,
-    color: "#666666",
+  mapLockSubtext: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  
+  // Bottom Section
+  bottomSection: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  bottomRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  bottomCard: {
+    width: "48%",
+    aspectRatio: 1, // Make cards square
+    borderRadius: 16,
+    padding: 15,
+    marginHorizontal: 5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  interestCirclesCard: {
+    backgroundColor: "#E8F5E8",
+  },
+  announcementsCard: {
+    backgroundColor: "#FFE6F2",
+  },
+  bottomCardTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginVertical: 8,
+  },
+  bottomCardDescription: {
+    fontSize: 11,
+    color: "#666",
+    lineHeight: 16,
+    marginBottom: 12,
+  },
+  card: {
+    width: "48%",
+    aspectRatio: 1,
+    borderRadius: 16,
+    backgroundColor: "#E8F5E8",
+    padding: 15,
+    marginHorizontal: 5,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cardContent: {
+    alignItems: "center",
+  },
+  cardIcon: {
+    fontSize: 36,
+    marginBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
   },
 }); 

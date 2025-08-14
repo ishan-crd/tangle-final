@@ -56,6 +56,110 @@ export interface UserProfile {
   updated_at: string;
 }
 
+export interface Tournament {
+  id: string;
+  title: string;
+  sport: string;
+  description: string;
+  max_participants: number;
+  current_participants: number;
+  date: string;
+  time: string;
+  location: string;
+  status: 'Registration Open' | 'Registration Closed' | 'Ongoing' | 'Completed' | 'Cancelled';
+  prize_pool: string;
+  society_id: string;
+  host_id: string;
+  created_at: string;
+  updated_at: string;
+  host_profile?: {
+    name: string;
+    avatar?: string;
+  };
+}
+
+export interface CommunityEvent {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  max_participants: number;
+  current_participants: number;
+  date: string;
+  time: string;
+  location: string;
+  status: 'Registration Open' | 'Registration Closed' | 'Ongoing' | 'Completed' | 'Cancelled';
+  highlights: string[];
+  society_id: string;
+  host_id: string;
+  created_at: string;
+  updated_at: string;
+  host_profile?: {
+    name: string;
+    avatar?: string;
+  };
+}
+
+export interface TournamentParticipant {
+  id: string;
+  tournament_id: string;
+  user_id: string;
+  joined_at: string;
+  user_profile?: {
+    name: string;
+    avatar?: string;
+  };
+}
+
+export interface CommunityEventParticipant {
+  id: string;
+  event_id: string;
+  user_id: string;
+  joined_at: string;
+  user_profile?: {
+    name: string;
+    avatar?: string;
+  };
+}
+
+// Groups Interfaces
+export interface Group {
+  id: string;
+  name: string;
+  description?: string;
+  society_id: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  is_private: boolean;
+  max_members: number;
+  member_count?: number;
+  is_member?: boolean;
+  user_role?: string;
+}
+
+export interface GroupMember {
+  id: string;
+  group_id: string;
+  user_id: string;
+  role: 'admin' | 'moderator' | 'member';
+  joined_at: string;
+  user_profile?: {
+    name: string;
+    avatar?: string;
+  };
+}
+
+export interface GroupInvitation {
+  id: string;
+  group_id: string;
+  invited_user_id: string;
+  invited_by: string;
+  status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
+  expires_at: string;
+}
+
 export interface Post {
   id: string;
   user_id: string;
@@ -649,6 +753,415 @@ export const notificationService = {
       .from('notifications')
       .update({ is_read: true })
       .eq('id', notificationId);
+    
+    if (error) throw error;
+  }
+};
+
+// Tournament Service
+export const tournamentService = {
+  async getTournamentsBySociety(societyId: string): Promise<Tournament[]> {
+    const { data, error } = await supabase
+      .from('tournaments')
+      .select(`
+        *,
+        host_profile:user_profiles(name, avatar)
+      `)
+      .eq('society_id', societyId)
+      .eq('status', 'Registration Open')
+      .order('date', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getTournamentsBySocietyName(societyName: string): Promise<Tournament[]> {
+    try {
+      // First try to get tournaments by society_id if society exists
+      const society = await societyService.getSocietyByName(societyName);
+      if (society) {
+        const { data, error } = await supabase
+          .from('tournaments')
+          .select(`
+            *,
+            host_profile:user_profiles(name, avatar)
+          `)
+          .eq('society_id', society.id)
+          .eq('status', 'Registration Open')
+          .order('date', { ascending: true });
+        
+        if (error) {
+          console.error('Error fetching tournaments by society_id:', error);
+          return [];
+        }
+        
+        return data || [];
+      }
+      
+      // Fallback: return empty array if society not found
+      return [];
+    } catch (error) {
+      console.error('Error in getTournamentsBySocietyName:', error);
+      return [];
+    }
+  },
+
+  async joinTournament(tournamentId: string, userId: string): Promise<TournamentParticipant> {
+    const { data, error } = await supabase
+      .from('tournament_participants')
+      .insert([{ tournament_id: tournamentId, user_id: userId }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    // Update current participants count
+    await updateTournamentParticipantsCount(tournamentId);
+    
+    return data;
+  },
+
+  async leaveTournament(tournamentId: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('tournament_participants')
+      .delete()
+      .eq('tournament_id', tournamentId)
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    
+    // Update current participants count
+    await updateTournamentParticipantsCount(tournamentId);
+  },
+
+  async getTournamentParticipants(tournamentId: string): Promise<TournamentParticipant[]> {
+    const { data, error } = await supabase
+      .from('tournament_participants')
+      .select(`
+        *,
+        user_profile:user_profiles(name, avatar)
+      `)
+      .eq('tournament_id', tournamentId);
+    
+    if (error) throw error;
+    return data || [];
+  }
+};
+
+// Helper function for updating tournament participants count
+async function updateTournamentParticipantsCount(tournamentId: string): Promise<void> {
+  const { data: participants } = await supabase
+    .from('tournament_participants')
+    .select('id')
+    .eq('tournament_id', tournamentId);
+  
+  const count = participants?.length || 0;
+  
+  const { error } = await supabase
+    .from('tournaments')
+    .update({ current_participants: count })
+    .eq('id', tournamentId);
+  
+  if (error) {
+    console.error('Error updating tournament participants count:', error);
+  }
+}
+
+// Community Event Service
+export const communityEventService = {
+  async getEventsBySociety(societyId: string): Promise<CommunityEvent[]> {
+    const { data, error } = await supabase
+      .from('community_events')
+      .select(`
+        *,
+        host_profile:user_profiles(name, avatar)
+      `)
+      .eq('society_id', societyId)
+      .eq('status', 'Registration Open')
+      .order('date', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getEventsBySocietyName(societyName: string): Promise<CommunityEvent[]> {
+    try {
+      // First try to get events by society_id if society exists
+      const society = await societyService.getSocietyByName(societyName);
+      if (society) {
+        const { data, error } = await supabase
+          .from('community_events')
+          .select(`
+            *,
+            host_profile:user_profiles(name, avatar)
+          `)
+          .eq('society_id', society.id)
+          .eq('status', 'Registration Open')
+          .order('date', { ascending: true });
+        
+        if (error) {
+          console.error('Error fetching events by society_id:', error);
+          return [];
+        }
+        
+        return data || [];
+      }
+      
+      // Fallback: return empty array if society not found
+      return [];
+    } catch (error) {
+      console.error('Error in getEventsBySocietyName:', error);
+      return [];
+    }
+  },
+
+  async joinEvent(eventId: string, userId: string): Promise<CommunityEventParticipant> {
+    const { data, error } = await supabase
+      .from('community_event_participants')
+      .insert([{ event_id: eventId, user_id: userId }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    // Update current participants count
+    await updateEventParticipantsCount(eventId);
+    
+    return data;
+  },
+
+  async leaveEvent(eventId: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('community_event_participants')
+      .delete()
+      .eq('event_id', eventId)
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    
+    // Update current participants count
+    await updateEventParticipantsCount(eventId);
+  },
+
+  async getEventParticipants(eventId: string): Promise<CommunityEventParticipant[]> {
+    const { data, error } = await supabase
+      .from('community_event_participants')
+      .select(`
+        *,
+        user_profile:user_profiles(name, avatar)
+      `)
+      .eq('event_id', eventId);
+    
+    if (error) throw error;
+    return data || [];
+  }
+};
+
+// Helper function for updating event participants count
+async function updateEventParticipantsCount(eventId: string): Promise<void> {
+  const { data: participants } = await supabase
+    .from('community_event_participants')
+    .select('id')
+    .eq('event_id', eventId);
+  
+  const count = participants?.length || 0;
+  
+  const { error } = await supabase
+    .from('community_events')
+    .update({ current_participants: count })
+    .eq('id', eventId);
+  
+  if (error) {
+    console.error('Error updating event participants count:', error);
+  }
+}
+
+// Groups Service
+export const groupsService = {
+  async getGroupsBySociety(societyId: string, userId: string): Promise<Group[]> {
+    const { data, error } = await supabase
+      .from('groups')
+      .select(`
+        *,
+        group_members!inner(user_id, role)
+      `)
+      .eq('society_id', societyId)
+      .eq('group_members.user_id', userId);
+    
+    if (error) throw error;
+    
+    // Transform data to include member count and user role
+    const groupsWithDetails = await Promise.all(
+      (data || []).map(async (group) => {
+        const memberCount = await this.getGroupMemberCount(group.id);
+        const userRole = group.group_members?.[0]?.role || 'member';
+        
+        return {
+          ...group,
+          member_count: memberCount,
+          user_role: userRole,
+          is_member: true
+        };
+      })
+    );
+    
+    return groupsWithDetails;
+  },
+
+  async getGroupsBySocietyName(societyName: string, userId: string): Promise<Group[]> {
+    try {
+      const society = await societyService.getSocietyByName(societyName);
+      if (society) {
+        return await this.getGroupsBySociety(society.id, userId);
+      }
+      return [];
+    } catch (error) {
+      console.error('Error in getGroupsBySocietyName:', error);
+      return [];
+    }
+  },
+
+  async getAllGroupsInSociety(societyId: string, userId: string): Promise<Group[]> {
+    // Get all groups in society and check if user is a member
+    const { data: allGroups, error } = await supabase
+      .from('groups')
+      .select('*')
+      .eq('society_id', societyId);
+    
+    if (error) throw error;
+    
+    const groupsWithDetails = await Promise.all(
+      (allGroups || []).map(async (group) => {
+        const memberCount = await this.getGroupMemberCount(group.id);
+        const isMember = await this.isUserMemberOfGroup(group.id, userId);
+        const userRole = isMember ? await this.getUserRoleInGroup(group.id, userId) : null;
+        
+        return {
+          ...group,
+          member_count: memberCount,
+          is_member: isMember,
+          user_role: userRole
+        };
+      })
+    );
+    
+    return groupsWithDetails;
+  },
+
+  async getAllGroupsInSocietyByName(societyName: string, userId: string): Promise<Group[]> {
+    try {
+      const society = await societyService.getSocietyByName(societyName);
+      if (society) {
+        return await this.getAllGroupsInSociety(society.id, userId);
+      }
+      return [];
+    } catch (error) {
+      console.error('Error in getAllGroupsInSocietyByName:', error);
+      return [];
+    }
+  },
+
+  async createGroup(groupData: Omit<Group, 'id' | 'created_at' | 'updated_at'>): Promise<Group> {
+    const { data, error } = await supabase
+      .from('groups')
+      .insert([groupData])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    // Add creator as admin member
+    await this.addMemberToGroup(data.id, groupData.created_by, 'admin');
+    
+    return data;
+  },
+
+  async addMemberToGroup(groupId: string, userId: string, role: string = 'member'): Promise<GroupMember> {
+    const { data, error } = await supabase
+      .from('group_members')
+      .insert([{ group_id: groupId, user_id: userId, role }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async removeMemberFromGroup(groupId: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('group_members')
+      .delete()
+      .eq('group_id', groupId)
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+  },
+
+  async getGroupMembers(groupId: string): Promise<GroupMember[]> {
+    const { data, error } = await supabase
+      .from('group_members')
+      .select(`
+        *,
+        user_profile:user_profiles(name, avatar)
+      `)
+      .eq('group_id', groupId)
+      .order('joined_at', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getGroupMemberCount(groupId: string): Promise<number> {
+    const { count, error } = await supabase
+      .from('group_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('group_id', groupId);
+    
+    if (error) throw error;
+    return count || 0;
+  },
+
+  async isUserMemberOfGroup(groupId: string, userId: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('group_members')
+      .select('id')
+      .eq('group_id', groupId)
+      .eq('user_id', userId)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
+    return !!data;
+  },
+
+  async getUserRoleInGroup(groupId: string, userId: string): Promise<string | null> {
+    const { data, error } = await supabase
+      .from('group_members')
+      .select('role')
+      .eq('group_id', groupId)
+      .eq('user_id', userId)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    return data?.role || null;
+  },
+
+  async updateGroup(groupId: string, updates: Partial<Group>): Promise<Group> {
+    const { data, error } = await supabase
+      .from('groups')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', groupId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteGroup(groupId: string): Promise<void> {
+    const { error } = await supabase
+      .from('groups')
+      .delete()
+      .eq('id', groupId);
     
     if (error) throw error;
   }

@@ -1,0 +1,431 @@
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from "react-native";
+import { useUser } from "../../contexts/UserContext";
+import { supabase } from "../../lib/supabase";
+
+interface UserProfile {
+  id: string;
+  full_name: string;
+  avatar_url?: string;
+  interests?: string[];
+  bio?: string;
+}
+
+export default function CreateGroupMembersScreen() {
+  const { topic, groupName, description } = useLocalSearchParams<{
+    topic: string;
+    groupName: string;
+    description: string;
+  }>();
+  const { userProfile } = useUser();
+  const [societyMembers, setSocietyMembers] = useState<UserProfile[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSocietyMembers();
+  }, []);
+
+  const fetchSocietyMembers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("id, full_name, avatar_url, interests, bio")
+        .eq("society_id", userProfile?.society_id)
+        .neq("id", userProfile?.id); // Exclude current user
+
+      if (error) throw error;
+      setSocietyMembers(data || []);
+    } catch (error) {
+      console.error("Error fetching society members:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleMemberSelection = (memberId: string) => {
+    const newSelected = new Set(selectedMembers);
+    if (newSelected.has(memberId)) {
+      newSelected.delete(memberId);
+    } else {
+      newSelected.add(memberId);
+    }
+    setSelectedMembers(newSelected);
+  };
+
+  const handleNext = () => {
+    // For now, navigate to review page
+    // In the future, this would go to "Group Style" page
+    router.push({
+      pathname: "/main/create-group-review",
+      params: {
+        topic,
+        groupName,
+        description,
+        selectedMembers: Array.from(selectedMembers).join(",")
+      }
+    });
+  };
+
+  const handleBackPress = () => {
+    router.back();
+  };
+
+  const filteredMembers = societyMembers.filter(member =>
+    member.full_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const renderMemberItem = ({ item }: { item: UserProfile }) => {
+    const isSelected = selectedMembers.has(item.id);
+    
+    return (
+      <TouchableOpacity
+        style={[styles.memberCard, isSelected && styles.selectedMemberCard]}
+        onPress={() => toggleMemberSelection(item.id)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.memberInfo}>
+          <View style={styles.avatarContainer}>
+            {item.avatar_url ? (
+              <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+            ) : (
+              <View style={styles.defaultAvatar}>
+                <Text style={styles.defaultAvatarText}>
+                  {item.full_name.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.memberDetails}>
+            <Text style={styles.memberName}>{item.full_name}</Text>
+            {item.interests && item.interests.length > 0 && (
+              <Text style={styles.memberInterests}>
+                {item.interests.slice(0, 2).join(", ")}
+              </Text>
+            )}
+          </View>
+        </View>
+        <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+          {isSelected && <Text style={styles.checkmark}>✓</Text>}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        
+        {/* Progress Indicator */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View style={styles.progressSegment} />
+            <View style={styles.progressSegment} />
+            <View style={styles.progressSegmentDashed} />
+            <View style={styles.progressSegmentDashed} />
+            <View style={styles.progressSegmentDashed} />
+          </View>
+        </View>
+        
+        {/* Title */}
+        <Text style={styles.title}>Add members</Text>
+        <Text style={styles.subtitle}>
+          select or invite people who will participate in your chat room
+        </Text>
+      </View>
+
+      {/* Connections Section */}
+      <View style={styles.sectionContainer}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Connections</Text>
+          <TouchableOpacity style={styles.dropdownButton}>
+            <Text style={styles.dropdownIcon}>⌄</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading connections...</Text>
+          </View>
+        ) : (
+          <View style={styles.membersList}>
+            {filteredMembers.slice(0, 3).map((member) => (
+              <View key={member.id} style={styles.memberCard}>
+                <View style={styles.memberInfo}>
+                  <View style={styles.avatarContainer}>
+                    {member.avatar_url ? (
+                      <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
+                    ) : (
+                      <View style={styles.defaultAvatar}>
+                        <Text style={styles.defaultAvatarText}>
+                          {member.full_name.charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.memberName}>{member.full_name}</Text>
+                </View>
+                <TouchableOpacity style={styles.addButton}>
+                  <Text style={styles.addButtonIcon}>+</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+
+      {/* Recommendation Section */}
+      <View style={styles.sectionContainer}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Recommendation</Text>
+          <Text style={styles.recommendationSubtitle}>(users who are into sports)</Text>
+          <TouchableOpacity style={styles.dropdownButton}>
+            <Text style={styles.dropdownIcon}>⌄</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.membersList}>
+          {filteredMembers.slice(3, 5).map((member) => (
+            <View key={member.id} style={styles.memberCard}>
+              <View style={styles.memberInfo}>
+                <View style={styles.avatarContainer}>
+                  {member.avatar_url ? (
+                    <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
+                  ) : (
+                    <View style={styles.defaultAvatar}>
+                      <Text style={styles.defaultAvatarText}>
+                        {member.full_name.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.memberName}>{member.full_name}</Text>
+              </View>
+              <TouchableOpacity style={styles.addButton}>
+                <Text style={styles.addButtonIcon}>+</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Next Button */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={handleNext}
+        >
+          <Text style={styles.nextButtonText}>
+            Next: Group Style
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  
+  // Header
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    alignItems: "center",
+  },
+  backButton: {
+    position: "absolute",
+    top: 60,
+    left: 20,
+    padding: 8,
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: "#000000",
+    fontWeight: "bold",
+  },
+  progressContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  progressBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  progressSegment: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#000000",
+    borderRadius: 2,
+  },
+  progressSegmentDashed: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderStyle: "dashed",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666666",
+    textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 20,
+  },
+
+  // Sections
+  sectionContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#000000",
+  },
+  recommendationSubtitle: {
+    fontSize: 14,
+    color: "#666666",
+    marginLeft: 8,
+  },
+  dropdownButton: {
+    padding: 4,
+  },
+  dropdownIcon: {
+    fontSize: 20,
+    color: "#666666",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#666666",
+  },
+  membersList: {
+    paddingBottom: 20,
+  },
+  memberCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  memberInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  avatarContainer: {
+    marginRight: 16,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  defaultAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#E0E0E0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  defaultAvatarText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#666666",
+  },
+  memberDetails: {
+    flex: 1,
+  },
+  memberName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000000",
+    marginBottom: 4,
+  },
+  memberInterests: {
+    fontSize: 14,
+    color: "#666666",
+  },
+  addButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "#000000",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addButtonIcon: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+
+  // Button
+  buttonContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  nextButton: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#87CEEB",
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  nextButtonDisabled: {
+    backgroundColor: "#E0E0E0",
+  },
+  nextButtonText: {
+    color: "#000000",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  nextButtonTextDisabled: {
+    color: "#999999",
+  },
+});
