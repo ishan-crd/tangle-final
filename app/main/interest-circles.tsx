@@ -12,7 +12,102 @@ import {
     View
 } from "react-native";
 import { useUser } from "../../contexts/UserContext";
-import { Group, groupsService } from "../../lib/supabase";
+import { Group, groupsService, supabase } from "../../lib/supabase";
+import { SvgUri } from 'react-native-svg';
+
+const EMOJI_URIS = [
+  require("../../assets/emojis/emoji1.svg"),
+  require("../../assets/emojis/emoji2.svg"),
+  require("../../assets/emojis/emoji3.svg"),
+  require("../../assets/emojis/emoji4.svg"),
+  require("../../assets/emojis/emoji5.svg"),
+  require("../../assets/emojis/emoji6.svg"),
+  require("../../assets/emojis/emoji7.svg"),
+  require("../../assets/emojis/emoji8.svg"),
+  require("../../assets/emojis/emoji9.svg"),
+  require("../../assets/emojis/emoji10.svg"),
+  require("../../assets/emojis/emoji11.svg"),
+  require("../../assets/emojis/emoji12.svg"),
+  require("../../assets/emojis/emoji13.svg"),
+  require("../../assets/emojis/emoji14.svg"),
+  require("../../assets/emojis/emoji15.svg"),
+  require("../../assets/emojis/emoji16.svg"),
+].map((mod) => require('react-native').Image.resolveAssetSource(mod).uri);
+
+const getAvatarUri = (avatar?: string) => {
+  const m = (avatar || '').match(/emoji(\d+)/);
+  const idx = m ? parseInt(m[1], 10) : 7;
+  const zero = ((idx - 1) % EMOJI_URIS.length + EMOJI_URIS.length) % EMOJI_URIS.length;
+  return EMOJI_URIS[zero];
+};
+
+function GroupCard({ item, onPress, onJoin, onLeave }: { item: Group; onPress: () => void; onJoin: () => void; onLeave: () => void }) {
+  const isMember = item.is_member;
+  const [avatars, setAvatars] = useState<string[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      const { data } = await supabase
+        .from('group_members')
+        .select('user_id, user_profile:user_profiles(avatar)')
+        .eq('group_id', item.id)
+        .limit(5);
+      if (!isMounted) return;
+      const uris = (data || []).map((r: any) => getAvatarUri(r.user_profile?.avatar));
+      setAvatars(uris);
+    })();
+    return () => { isMounted = false; };
+  }, [item.id]);
+
+  return (
+    <TouchableOpacity 
+      style={styles.groupCard}
+      onPress={onPress}
+    >
+      <View style={styles.avatarCluster}>
+        {avatars.length > 0 ? (
+          <>
+            {avatars.slice(0,5).map((uri, index) => (
+              <View key={index} style={[styles.groupAvatar, { marginLeft: index > 0 ? -8 : 0 }]}> 
+                <SvgUri uri={uri} width={35} height={35} />
+              </View>
+            ))}
+            {item.member_count && item.member_count > 5 && (
+              <View style={[styles.groupAvatar, styles.moreAvatar, { marginLeft: -8 }]}> 
+                <Text style={styles.moreAvatarText}>+{(item.member_count - 5)}</Text>
+              </View>
+            )}
+          </>
+        ) : (
+          <View style={styles.groupAvatar}><Text style={styles.avatarText}>?</Text></View>
+        )}
+      </View>
+
+      <Text style={styles.groupName}>{item.name}</Text>
+      {(item as any).color || (item as any).icon ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: (item as any).color || '#EEE', alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>
+            <Text style={{ fontSize: 12 }}>{(item as any).icon || '📱'}</Text>
+          </View>
+          <Text style={{ fontSize: 12, color: '#666' }}>Styled</Text>
+        </View>
+      ) : null}
+      <Text style={styles.memberCount}>
+        {item.member_count || 0} member{item.member_count !== 1 ? 's' : ''}
+      </Text>
+
+      <TouchableOpacity
+        style={[styles.actionButton, isMember ? styles.leaveButton : styles.joinButton]}
+        onPress={isMember ? onLeave : onJoin}
+      >
+        <Text style={[styles.actionButtonText, isMember ? styles.leaveButtonText : styles.joinButtonText]}>
+          {isMember ? 'Leave' : 'Join'}
+        </Text>
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
+}
 
 export default function GroupsScreen() {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -59,6 +154,12 @@ export default function GroupsScreen() {
         return;
       }
 
+      const target = groups.find(g => g.id === groupId);
+      if (target?.is_private) {
+        Alert.alert("Private group", "You can't join directly. Ask an admin to add you.");
+        return;
+      }
+
       await groupsService.addMemberToGroup(groupId, userProfile.id, 'member');
       Alert.alert("Success", "You've joined the group!");
       
@@ -96,68 +197,45 @@ export default function GroupsScreen() {
     group.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderGroupCard = ({ item }: { item: Group }) => {
-    const isMember = item.is_member;
-    
-    return (
-      <TouchableOpacity 
-        style={styles.groupCard}
-        onPress={() => isMember ? 
-          Alert.alert("Group Info", `You are a member of ${item.name}`) : 
-          handleJoinGroup(item.id)
-        }
-      >
-        {/* Group Avatar Cluster */}
-        <View style={styles.avatarCluster}>
-          {item.member_count && item.member_count > 0 ? (
-            <>
-              {/* Show up to 5 avatars */}
-              {Array.from({ length: Math.min(5, item.member_count) }).map((_, index) => (
-                <View key={index} style={[styles.groupAvatar, { marginLeft: index > 0 ? -8 : 0 }]}>
-                  <Text style={styles.avatarText}>
-                    {String.fromCharCode(65 + (index % 26))}
-                  </Text>
-                </View>
-              ))}
-              
-              {/* Show +X if more than 5 members */}
-              {item.member_count > 5 && (
-                <View style={[styles.groupAvatar, styles.moreAvatar, { marginLeft: -8 }]}>
-                  <Text style={styles.moreAvatarText}>+{item.member_count - 5}</Text>
-                </View>
-              )}
-            </>
-          ) : (
-            <View style={styles.groupAvatar}>
-              <Text style={styles.avatarText}>?</Text>
-            </View>
-          )}
-        </View>
+  const EMOJI_URIS = [
+    require("../../assets/emojis/emoji1.svg"),
+    require("../../assets/emojis/emoji2.svg"),
+    require("../../assets/emojis/emoji3.svg"),
+    require("../../assets/emojis/emoji4.svg"),
+    require("../../assets/emojis/emoji5.svg"),
+    require("../../assets/emojis/emoji6.svg"),
+    require("../../assets/emojis/emoji7.svg"),
+    require("../../assets/emojis/emoji8.svg"),
+    require("../../assets/emojis/emoji9.svg"),
+    require("../../assets/emojis/emoji10.svg"),
+    require("../../assets/emojis/emoji11.svg"),
+    require("../../assets/emojis/emoji12.svg"),
+    require("../../assets/emojis/emoji13.svg"),
+    require("../../assets/emojis/emoji14.svg"),
+    require("../../assets/emojis/emoji15.svg"),
+    require("../../assets/emojis/emoji16.svg"),
+  ].map((mod) => require('react-native').Image.resolveAssetSource(mod).uri);
 
-        {/* Group Info */}
-        <Text style={styles.groupName}>{item.name}</Text>
-        <Text style={styles.memberCount}>
-          {item.member_count || 0} member{item.member_count !== 1 ? 's' : ''}
-        </Text>
-
-        {/* Action Button */}
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            isMember ? styles.leaveButton : styles.joinButton
-          ]}
-          onPress={() => isMember ? handleLeaveGroup(item.id) : handleJoinGroup(item.id)}
-        >
-          <Text style={[
-            styles.actionButtonText,
-            isMember ? styles.leaveButtonText : styles.joinButtonText
-          ]}>
-            {isMember ? 'Leave' : 'Join'}
-          </Text>
-        </TouchableOpacity>
-      </TouchableOpacity>
-    );
+  const getUri = (avatar?: string) => {
+    const m = (avatar || '').match(/emoji(\d+)/);
+    const idx = m ? parseInt(m[1], 10) : 7;
+    const zero = ((idx - 1) % EMOJI_URIS.length + EMOJI_URIS.length) % EMOJI_URIS.length;
+    return EMOJI_URIS[zero];
   };
+
+  const [memberAvatarsCache] = useState<Record<string, string[]>>({});
+
+  const renderGroupCard = ({ item }: { item: Group }) => (
+    <GroupCard
+      item={item}
+      onPress={() => item.is_member 
+        ? router.push({ pathname: "/main/group-chat/[groupId]", params: { groupId: item.id, groupName: item.name, icon: (item as any).icon, color: (item as any).color } })
+        : handleJoinGroup(item.id)
+      }
+      onJoin={() => handleJoinGroup(item.id)}
+      onLeave={() => handleLeaveGroup(item.id)}
+    />
+  );
 
   if (loading) {
     return (
@@ -343,11 +421,11 @@ const styles = StyleSheet.create({
     width: 35,
     height: 35,
     borderRadius: 17.5,
-    backgroundColor: "#4CAF50",
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderWidth: 0,
+    borderColor: "transparent",
   },
   avatarText: {
     color: "#FFFFFF",

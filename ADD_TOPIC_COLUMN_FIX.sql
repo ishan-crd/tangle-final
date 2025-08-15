@@ -21,6 +21,28 @@ BEGIN
     END IF;
 END $$;
 
+-- Also ensure group style columns exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'groups' 
+        AND column_name = 'icon'
+        AND table_schema = 'public'
+    ) THEN
+        ALTER TABLE public.groups ADD COLUMN icon TEXT;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'groups' 
+        AND column_name = 'color'
+        AND table_schema = 'public'
+    ) THEN
+        ALTER TABLE public.groups ADD COLUMN color TEXT;
+    END IF;
+END $$;
+
 -- =====================================================
 -- STEP 2: UPDATE EXISTING RECORDS
 -- =====================================================

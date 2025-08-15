@@ -11,6 +11,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SvgUri } from 'react-native-svg';
+import { useUser } from "../../contexts/UserContext";
 
 SplashScreen.preventAutoHideAsync();
 const { width } = Dimensions.get("window");
@@ -18,6 +20,8 @@ const { width } = Dimensions.get("window");
 export default function EmojiAvatarScreen() {
   const router = useRouter();
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const { user, updateUserProfile } = useUser();
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
   useEffect(() => {
     async function loadFonts() {
@@ -39,23 +43,50 @@ export default function EmojiAvatarScreen() {
 
   if (!fontsLoaded) return null;
 
-  const emojiImages = [
-    require("../../assets/emojis/emoji1.png"),
-    require("../../assets/emojis/emoji2.png"),
-    require("../../assets/emojis/emoji3.png"),
-    require("../../assets/emojis/emoji4.png"),
-    require("../../assets/emojis/emoji5.png"),
-    require("../../assets/emojis/emoji6.png"),
-    require("../../assets/emojis/emoji7.png"),
-    require("../../assets/emojis/emoji8.png"),
-    require("../../assets/emojis/emoji9.png"),
-    require("../../assets/emojis/emoji10.png"),
-    require("../../assets/emojis/emoji11.png"),
-    require("../../assets/emojis/emoji12.png"),
-    require("../../assets/emojis/emoji13.png"),
-    require("../../assets/emojis/emoji14.png"),
-    require("../../assets/emojis/emoji15.png"),
+  const EMOJI_URIS = [
+    require("../../assets/emojis/emoji1.svg"),
+    require("../../assets/emojis/emoji2.svg"),
+    require("../../assets/emojis/emoji3.svg"),
+    require("../../assets/emojis/emoji4.svg"),
+    require("../../assets/emojis/emoji5.svg"),
+    require("../../assets/emojis/emoji6.svg"),
+    require("../../assets/emojis/emoji7.svg"),
+    require("../../assets/emojis/emoji8.svg"),
+    require("../../assets/emojis/emoji9.svg"),
+    require("../../assets/emojis/emoji10.svg"),
+    require("../../assets/emojis/emoji11.svg"),
+    require("../../assets/emojis/emoji12.svg"),
+    require("../../assets/emojis/emoji13.svg"),
+    require("../../assets/emojis/emoji14.svg"),
+    require("../../assets/emojis/emoji15.svg"),
+    require("../../assets/emojis/emoji16.svg"),
+  ].map(mod => Image.resolveAssetSource(mod).uri);
+
+  const bgColors = [
+    "#FFEFAA", "#E0F7FA", "#EDE7F6", "#E8F5E9", "#FFF3E0",
+    "#F3E5F5", "#E1F5FE", "#FFFDE7", "#FCE4EC", "#E0F2F1",
+    "#FFF8E1", "#F1F8E9", "#E8EAF6", "#F9FBE7", "#FBE9E7",
+    "#EDEDED"
   ];
+
+  const selectedUri = EMOJI_URIS[selectedIndex % EMOJI_URIS.length];
+  const selectedBg = bgColors[selectedIndex % bgColors.length];
+
+  const handleSelect = (index: number) => {
+    setSelectedIndex(index);
+  };
+
+  const handleNext = async () => {
+    try {
+      // Persist avatar as app asset reference key (emoji1..emoji15)
+      const avatarKey = `emoji${selectedIndex + 1}`;
+      await updateUserProfile({ avatar: avatarKey });
+      router.push("/onboarding/notifications");
+    } catch (e) {
+      console.error("Failed to save avatar", e);
+      router.push("/onboarding/notifications");
+    }
+  };
 
   return (
     <ScrollView
@@ -70,20 +101,26 @@ export default function EmojiAvatarScreen() {
         😎
       </Text>
 
-      <Image
-        source={require("../../assets/emojis/mainEmoji.png")}
-        style={styles.mainEmoji}
-      />
+      <View style={[styles.previewCard, { backgroundColor: selectedBg }]}> 
+        <SvgUri uri={selectedUri} width={(width - 48) * 0.6} height={(width - 48) * 0.6} />
+      </View>
 
       <View style={styles.emojiGrid}>
-        {emojiImages.map((emoji, index) => (
-          <Image key={index} source={emoji} style={styles.emojiIcon} />
+        {EMOJI_URIS.map((uri, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => handleSelect(index)}
+            style={[styles.emojiTile, { backgroundColor: bgColors[index % bgColors.length] }, selectedIndex === index && styles.emojiTileSelected]}
+            activeOpacity={0.8}
+          >
+            <SvgUri uri={uri} width={(width - 80) / 4} height={(width - 80) / 4} />
+          </TouchableOpacity>
         ))}
       </View>
 
       <TouchableOpacity
         style={styles.button}
-                  onPress={() => router.push("/onboarding/notifications")}
+        onPress={handleNext}
       >
         <Text style={styles.buttonText}>Next</Text>
       </TouchableOpacity>
@@ -116,19 +153,33 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 28,
   },
-  mainEmoji: {
-    width: width - 100,
-    height: width - 100,
+  previewCard: {
+    width: width - 48,
+    height: (width - 48) * 0.6,
     alignSelf: "center",
     borderRadius: 20,
-    backgroundColor: "#FFEFAA",
-    marginBottom: 20,
+    marginBottom: 16,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
+  previewEmoji: { width: (width - 48) * 0.6, height: (width - 48) * 0.6 },
   emojiGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: 32,
+  },
+  emojiTile: {
+    width: (width - 80) / 4,
+    height: (width - 80) / 4,
+    borderRadius: 14,
+    marginBottom: 12,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  emojiTileSelected: {
+    borderWidth: 2,
+    borderColor: '#000'
   },
   emojiIcon: {
     width: (width - 80) / 4,

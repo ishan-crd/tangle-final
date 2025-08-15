@@ -11,7 +11,9 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    Image
 } from "react-native";
+import * as ImagePicker from 'expo-image-picker';
 import { useUser } from "../../../contexts/UserContext";
 import { matchService, postService } from "../../../lib/supabase";
 
@@ -24,6 +26,7 @@ export default function AddScreen() {
   const [postContent, setPostContent] = useState("");
   const [postTitle, setPostTitle] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [imageUri, setImageUri] = useState<string | null>(null);
   
   // Match creation states
   const [matchTitle, setMatchTitle] = useState("");
@@ -67,6 +70,7 @@ export default function AddScreen() {
         society_id: societyId,
         title: postTitle.trim() || undefined,
         content: postContent.trim(),
+        media_url: imageUri || undefined,
         post_type: "general",
         is_announcement: false,
         is_pinned: false,
@@ -77,6 +81,7 @@ export default function AddScreen() {
       Alert.alert("Success", "Post created successfully!");
       setPostContent("");
       setPostTitle("");
+      setImageUri(null);
       setShowModal(false);
     } catch (error) {
       console.error('Error creating post:', error);
@@ -166,7 +171,7 @@ export default function AddScreen() {
           <KeyboardAvoidingView 
             style={styles.modalContent}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 70 : 20}
           >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Create Post</Text>
@@ -175,7 +180,7 @@ export default function AddScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 110 }}>
               <View style={styles.inputSection}>
                 <Text style={styles.inputLabel}>Title (Optional)</Text>
                 <TextInput
@@ -198,6 +203,30 @@ export default function AddScreen() {
                   textAlignVertical="top"
                   placeholderTextColor="#999"
                 />
+              </View>
+
+              <View style={[styles.inputSection, { marginTop: -10 }]}> 
+                {imageUri ? (
+                  <View style={{ alignItems: 'center', marginBottom: 10 }}>
+                    <Image source={{ uri: imageUri }} style={{ width: width - 60, height: (width - 60) * 0.6, borderRadius: 12 }} />
+                  </View>
+                ) : null}
+                <TouchableOpacity
+                  style={[styles.addImageButton, imageUri && { backgroundColor: '#E8F5E9' }]}
+                  onPress={async () => {
+                    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                    if (status !== 'granted') {
+                      Alert.alert('Permission needed', 'We need camera roll permission to select images');
+                      return;
+                    }
+                    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
+                    if (!result.canceled) {
+                      setImageUri(result.assets[0].uri);
+                    }
+                  }}
+                >
+                  <Text style={styles.addImageText}>{imageUri ? 'Change Image' : 'Add Image'}</Text>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.characterCount}>
@@ -225,7 +254,7 @@ export default function AddScreen() {
           <KeyboardAvoidingView 
             style={styles.modalContent}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 70 : 20}
           >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Host a Match</Text>
@@ -234,7 +263,7 @@ export default function AddScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 110 }}>
               <View style={styles.matchIconContainer}>
                 <Text style={styles.matchIcon}>🏀</Text>
               </View>
@@ -442,7 +471,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   header: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
     backgroundColor: "#F8F9FA",
   },
   title: {
@@ -581,6 +612,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F9FA",
     minHeight: 120,
     textAlignVertical: "top",
+  },
+  addImageButton: {
+    backgroundColor: '#F0F0F0',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center'
+  },
+  addImageText: {
+    color: '#333',
+    fontWeight: '600'
   },
   textArea: {
     minHeight: 100,

@@ -10,16 +10,19 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useUser } from "../../contexts/UserContext";
-import { groupsService } from "../../lib/supabase";
+import { groupsService, supabase } from "../../lib/supabase";
 
 export default function CreateGroupReviewScreen() {
-  const { topic, groupName, description, selectedMembers } = useLocalSearchParams<{
+  const { topic, groupName, description, selectedMembers, isPrivate, icon, color } = useLocalSearchParams<{
     topic: string;
     groupName: string;
     description: string;
     selectedMembers: string;
+    isPrivate?: string;
+    icon?: string;
+    color?: string;
   }>();
-  const { userProfile } = useUser();
+  const { user: userProfile } = useUser();
   const [memberNames, setMemberNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -31,7 +34,7 @@ export default function CreateGroupReviewScreen() {
   const fetchMemberNames = async () => {
     try {
       const memberIds = selectedMembers.split(",");
-      const { data, error } = await groupsService.supabase
+      const { data, error } = await supabase
         .from("user_profiles")
         .select("full_name")
         .in("id", memberIds);
@@ -55,11 +58,12 @@ export default function CreateGroupReviewScreen() {
         society_id: userProfile?.society_id!,
         created_by: userProfile?.id!,
         max_members: 50, // Default max members
+        is_private: isPrivate === 'true',
+        icon: icon || '📱',
+        color: color || '#FFFFFF'
       };
 
-      const { data: group, error: groupError } = await groupsService.createGroup(groupData);
-      
-      if (groupError) throw groupError;
+      const group = await groupsService.createGroup(groupData);
 
       // Add selected members to the group
       const memberIds = selectedMembers.split(",");
@@ -76,7 +80,7 @@ export default function CreateGroupReviewScreen() {
         [
           {
             text: "Go to Groups",
-            onPress: () => router.push("/main/groups")
+            onPress: () => router.push("/main/interest-circles")
           }
         ]
       );
@@ -108,6 +112,8 @@ export default function CreateGroupReviewScreen() {
     };
     return topicIcons[topicId] || "📱";
   };
+  
+  const getGroupStyleIcon = () => icon || getTopicIcon(topic);
 
   return (
     <View style={styles.container}>
@@ -158,6 +164,11 @@ export default function CreateGroupReviewScreen() {
             <Text style={styles.infoLabel}>Description:</Text>
             <Text style={styles.infoValue}>{description}</Text>
           </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Privacy:</Text>
+            <Text style={styles.infoValue}>{isPrivate === 'true' ? 'Private' : 'Public'}</Text>
+          </View>
         </View>
 
         {/* Members Card */}
@@ -185,6 +196,17 @@ export default function CreateGroupReviewScreen() {
         <View style={styles.reviewCard}>
           <Text style={styles.cardTitle}>Society</Text>
           <Text style={styles.infoValue}>{userProfile?.society}</Text>
+        </View>
+
+        {/* Style Preview */}
+        <View style={styles.reviewCard}>
+          <Text style={styles.cardTitle}>Group Style</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: color || '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 18 }}>{icon || '📱'}</Text>
+            </View>
+            <Text style={styles.infoValue}>Icon and color will be shown with the group later.</Text>
+          </View>
         </View>
       </ScrollView>
 

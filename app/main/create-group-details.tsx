@@ -6,12 +6,14 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Keyboard,
 } from "react-native";
 
 export default function CreateGroupDetailsScreen() {
   const { topic } = useLocalSearchParams<{ topic: string }>();
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
+  const [isPrivate, setIsPrivate] = useState(false);
 
   const handleNext = () => {
     if (groupName.trim() && description.trim()) {
@@ -20,7 +22,8 @@ export default function CreateGroupDetailsScreen() {
         params: { 
           topic: topic,
           groupName: groupName.trim(),
-          description: description.trim()
+          description: description.trim(),
+          isPrivate: isPrivate ? "true" : "false"
         }
       });
     }
@@ -85,6 +88,9 @@ export default function CreateGroupDetailsScreen() {
             numberOfLines={4}
             maxLength={150}
             textAlignVertical="top"
+            returnKeyType="done"
+            blurOnSubmit
+            onSubmitEditing={() => Keyboard.dismiss()}
           />
           <Text style={styles.characterCount}>{description.length}/150</Text>
         </View>
@@ -93,7 +99,14 @@ export default function CreateGroupDetailsScreen() {
         <View style={styles.privacySection}>
           <Text style={styles.privacyTitle}>Privacy Settings:</Text>
           
-          <TouchableOpacity style={styles.privacyOption}>
+          <TouchableOpacity
+            style={[
+              styles.privacyOption,
+              !isPrivate && styles.privacyOptionSelected
+            ]}
+            onPress={() => setIsPrivate(false)}
+            activeOpacity={0.8}
+          >
             <View style={styles.privacyOptionContent}>
               <Text style={styles.privacyIcon}>🌐</Text>
               <View style={styles.privacyTextContainer}>
@@ -101,10 +114,17 @@ export default function CreateGroupDetailsScreen() {
                 <Text style={styles.privacyOptionSubtitle}>Anyone in your society can join</Text>
               </View>
             </View>
-            <View style={styles.radioButton} />
+            <View style={[styles.radioButton, !isPrivate && styles.radioButtonSelected]} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.privacyOption}>
+          <TouchableOpacity
+            style={[
+              styles.privacyOption,
+              isPrivate && styles.privacyOptionSelected
+            ]}
+            onPress={() => setIsPrivate(true)}
+            activeOpacity={0.8}
+          >
             <View style={styles.privacyOptionContent}>
               <Text style={styles.privacyIcon}>🔒</Text>
               <View style={styles.privacyTextContainer}>
@@ -112,7 +132,7 @@ export default function CreateGroupDetailsScreen() {
                 <Text style={styles.privacyOptionSubtitle}>Admin approval required</Text>
               </View>
             </View>
-            <View style={styles.radioButton} />
+            <View style={[styles.radioButton, isPrivate && styles.radioButtonSelected]} />
           </TouchableOpacity>
         </View>
       </View>
@@ -250,6 +270,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
   },
+  privacyOptionSelected: {
+    borderColor: "#000000",
+  },
   privacyOptionContent: {
     flexDirection: "row",
     alignItems: "center",
@@ -279,6 +302,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#E0E0E0",
     backgroundColor: "#FFFFFF",
+  },
+  radioButtonSelected: {
+    borderColor: "#000000",
+    backgroundColor: "#000000",
   },
 
   // Button

@@ -11,31 +11,40 @@ import {
   View,
 } from "react-native";
 import { useUser } from "../../../contexts/UserContext";
+import { SvgUri } from 'react-native-svg';
 import { Post } from "../../../lib/supabase";
 
 const supabase = createClient('https://lrqrxyqrmwrbsxgiyuio.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycXJ4eXFybXdyYnN4Z2l5dWlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDI5MDgsImV4cCI6MjA2OTc3ODkwOH0.2wjV1fNp2oRxzlbHd5pZNVfOzHrNI5Q-s6-Rc3Qdoq4');
 
+// Pre-resolve all emoji SVG asset URIs
+const EMOJI_SVG_URIS = [
+  require("../../../assets/emojis/emoji1.svg"),
+  require("../../../assets/emojis/emoji2.svg"),
+  require("../../../assets/emojis/emoji3.svg"),
+  require("../../../assets/emojis/emoji4.svg"),
+  require("../../../assets/emojis/emoji5.svg"),
+  require("../../../assets/emojis/emoji6.svg"),
+  require("../../../assets/emojis/emoji7.svg"),
+  require("../../../assets/emojis/emoji8.svg"),
+  require("../../../assets/emojis/emoji9.svg"),
+  require("../../../assets/emojis/emoji10.svg"),
+  require("../../../assets/emojis/emoji11.svg"),
+  require("../../../assets/emojis/emoji12.svg"),
+  require("../../../assets/emojis/emoji13.svg"),
+  require("../../../assets/emojis/emoji14.svg"),
+  require("../../../assets/emojis/emoji15.svg"),
+].map((mod) => Image.resolveAssetSource(mod).uri);
+
+const getEmojiUriFromIndex = (idx: number) => {
+  const safe = ((idx % EMOJI_SVG_URIS.length) + EMOJI_SVG_URIS.length) % EMOJI_SVG_URIS.length;
+  return EMOJI_SVG_URIS[safe];
+};
+
 const bestFriends = [
-  {
-    name: "Navya Talwar",
-    distance: "<1 km",
-    avatar: require("../../../assets/emojis/emoji1.png"),
-  },
-  {
-    name: "Yash Bhati",
-    distance: "2 km",
-    avatar: require("../../../assets/emojis/emoji2.png"),
-  },
-  {
-    name: "Thripati",
-    distance: "1 km",
-    avatar: require("../../../assets/emojis/emoji3.png"),
-  },
-  {
-    name: "Rawat",
-    distance: "—",
-    avatar: require("../../../assets/emojis/emoji4.png"),
-  },
+  { name: "Navya Talwar", distance: "<1 km", emojiIndex: 0 },
+  { name: "Yash Bhati", distance: "2 km", emojiIndex: 1 },
+  { name: "Thripati", distance: "1 km", emojiIndex: 2 },
+  { name: "Rawat", distance: "—", emojiIndex: 3 },
 ];
 
 export default function Profile() {
@@ -44,12 +53,111 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState("Connections");
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
+  const [societyUsers, setSocietyUsers] = useState<Array<{ id: string; name: string; avatar?: string }>>([]);
+  const [addingFriend, setAddingFriend] = useState<Set<string>>(new Set());
+  const [addedFriends, setAddedFriends] = useState<Set<string>>(new Set());
+  const [existingFriendIds, setExistingFriendIds] = useState<Set<string>>(new Set());
+  const [postsCount, setPostsCount] = useState(0);
+  const [friendsCount, setFriendsCount] = useState(0);
 
   useEffect(() => {
     if (activeTab === "Posts" && user?.id) {
       loadUserPosts();
     }
   }, [activeTab, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    fetchCounts();
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchSocietyUsers();
+    fetchExistingFriends();
+  }, [user?.society_id, user?.society, user?.id]);
+
+  const fetchExistingFriends = async () => {
+    try {
+      if (!user?.id) return;
+      const { data, error } = await supabase
+        .from('friendships')
+        .select('user_id, friend_id, status')
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id})`);
+      if (error) throw error;
+      const ids = new Set<string>();
+      (data || []).forEach((f: any) => {
+        if (f.status === 'accepted' || f.status === 'pending') {
+          const other = f.user_id === user.id ? f.friend_id : f.user_id;
+          ids.add(other);
+        }
+      });
+      setExistingFriendIds(ids);
+    } catch (e) {
+      console.error('Error fetching existing friends:', e);
+    }
+  };
+
+  const fetchSocietyUsers = async () => {
+    try {
+      if (!user) return;
+      let query = supabase.from('user_profiles').select('id, name, avatar');
+      if (user.society_id) query = query.eq('society_id', user.society_id);
+      else if (user.society) query = query.eq('society', user.society);
+      if (user.id) query = query.neq('id', user.id);
+      const { data, error } = await query.order('name');
+      if (error) throw error;
+      setSocietyUsers(data || []);
+    } catch (e) {
+      console.error('Error fetching society users:', e);
+      setSocietyUsers([]);
+    }
+  };
+
+  const fetchCounts = async () => {
+    try {
+      // Posts count
+      const { count: postCnt } = await supabase
+        .from('posts')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user!.id);
+      setPostsCount(postCnt || 0);
+
+      // Friends count (accepted friendships where user is either side)
+      const { count: friendCnt } = await supabase
+        .from('friendships')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'accepted')
+        .or(`user_id.eq.${user!.id},friend_id.eq.${user!.id}`);
+      setFriendsCount(friendCnt || 0);
+    } catch (e) {
+      console.error('Error fetching profile counts:', e);
+    }
+  };
+
+  const parseAvatarIndex = (avatar?: string) => {
+    const match = (avatar || '').match(/emoji(\d+)/);
+    const oneBased = match ? parseInt(match[1], 10) : 7;
+    const zeroBased = ((oneBased - 1) % EMOJI_SVG_URIS.length + EMOJI_SVG_URIS.length) % EMOJI_SVG_URIS.length;
+    return zeroBased;
+  };
+
+  const addFriend = async (friendId: string) => {
+    if (!user?.id) return;
+    try {
+      setAddingFriend(prev => new Set(prev).add(friendId));
+      const { error } = await supabase
+        .from('friendships')
+        .upsert({ user_id: user.id, friend_id: friendId, status: 'accepted' }, { onConflict: 'user_id,friend_id' });
+      if (error) throw error;
+      setAddedFriends(prev => new Set(prev).add(friendId));
+      setFriendsCount(prev => prev + 1);
+      setExistingFriendIds(prev => { const n = new Set(prev); n.add(friendId); return n; });
+    } catch (e) {
+      console.error('Error adding friend:', e);
+    } finally {
+      setAddingFriend(prev => { const n = new Set(prev); n.delete(friendId); return n; });
+    }
+  };
 
   const loadUserPosts = async () => {
     if (!user?.id) return;
@@ -129,7 +237,7 @@ export default function Profile() {
               userPosts.map((post, index) => (
                 <View key={index} style={styles.postCard}>
                   <View style={styles.postHeader}>
-                    <Image source={require("../../../assets/emojis/emoji7.png")} style={styles.postAvatar} />
+                    <SvgUri uri={getEmojiUriFromIndex(((user?.avatar || '').match(/emoji(\d+)/)?.[1] ? (parseInt((user?.avatar || '').match(/emoji(\d+)/)![1], 10) - 1) : 6))} width={40} height={40} style={styles.postAvatar} />
                     <View>
                       <Text style={styles.postAuthor}>You</Text>
                       <Text style={styles.postTime}>{formatDate(post.created_at)}</Text>
@@ -145,77 +253,40 @@ export default function Profile() {
             )}
           </View>
         );
-      case "Stories":
-        return (
-          <View style={styles.tabContent}>
-            <Text style={styles.tabTitle}>Your Stories</Text>
-            <View style={styles.storiesGrid}>
-              <View style={styles.storyCard}>
-                <View style={styles.storyAvatar}>
-                  <Text style={styles.storyPlus}>+</Text>
-                </View>
-                <Text style={styles.storyLabel}>Add Story</Text>
-              </View>
-              <View style={styles.storyCard}>
-                <Image source={require("../../../assets/emojis/emoji5.png")} style={styles.storyImage} />
-                <Text style={styles.storyLabel}>Workout</Text>
-              </View>
-              <View style={styles.storyCard}>
-                <Image source={require("../../../assets/emojis/emoji6.png")} style={styles.storyImage} />
-                <Text style={styles.storyLabel}>Gym</Text>
-              </View>
-            </View>
-          </View>
-        );
+      // Stories removed
       case "Connections":
         return (
           <View style={styles.tabContent}>
             <View style={styles.stats}>
               <View style={styles.statBox}>
-                <Text style={styles.statNumber}>78</Text>
+                <Text style={styles.statNumber}>{friendsCount}</Text>
                 <Text style={styles.statLabel}>Friends</Text>
               </View>
               <View style={styles.statBox}>
-                <Text style={styles.statNumber}>20</Text>
-                <Text style={styles.statLabel}>Following</Text>
+                <Text style={styles.statNumber}>{postsCount}</Text>
+                <Text style={styles.statLabel}>Posts</Text>
               </View>
             </View>
 
             <View style={styles.bestFriendsHeader}>
-              <Text style={styles.bestFriendsTitle}>Best Friends</Text>
-              <View style={styles.groupAvatars}>
-                <Image source={require("../../../assets/emojis/emoji8.png")} style={styles.groupAvatar} />
-                <Image source={require("../../../assets/emojis/emoji9.png")} style={styles.groupAvatar} />
-                <Image source={require("../../../assets/emojis/emoji10.png")} style={styles.groupAvatar} />
-                <View style={styles.moreAvatar}>
-                  <Text style={styles.moreText}>+9</Text>
-                </View>
-              </View>
+              <Text style={styles.bestFriendsTitle}>Add to Friends</Text>
             </View>
 
-            {bestFriends.map((friend, index) => (
-              <View key={index} style={styles.friendCard}>
+            {societyUsers.filter(u => !existingFriendIds.has(u.id) && !addedFriends.has(u.id)).map((u) => (
+              <View key={u.id} style={styles.friendCard}>
                 <View style={styles.friendInfo}>
-                  <Image source={friend.avatar} style={styles.friendAvatar} />
+                  <SvgUri uri={EMOJI_SVG_URIS[parseAvatarIndex(u.avatar)]} width={50} height={50} style={styles.friendAvatar} />
                   <View>
-                    <Text style={styles.friendName}>{friend.name}</Text>
-                    <Text style={styles.friendDistance}>{friend.distance}</Text>
+                    <Text style={styles.friendName}>{u.name}</Text>
                   </View>
                 </View>
 
                 <View style={styles.friendActions}>
-                  <View style={styles.iconButton}>
-                    <Image
-                      source={require("../../../assets/icons/video-call.png")}
-                      style={styles.icon}
-                    />
-                  </View>
-                  <View style={[styles.iconButton, { backgroundColor: "#EDF1FD" }]}>
-                    <Image
-                      source={require("../../../assets/icons/check.png")}
-                      style={[styles.icon, { tintColor: "#3575EC" }]}
-                    />
-                  </View>
+                  <TouchableOpacity style={[styles.iconButton, { backgroundColor: '#3575EC' }]} onPress={() => addFriend(u.id)} disabled={addingFriend.has(u.id) || addedFriends.has(u.id)}>
+                    <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700' }}>
+                      {addingFriend.has(u.id) ? '…' : addedFriends.has(u.id) ? '✓' : '+'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             ))}
@@ -239,10 +310,13 @@ export default function Profile() {
           </View>
         </View>
 
-        <Image
-          source={require("../../../assets/emojis/emoji7.png")}
-          style={styles.profileImage}
-        />
+        {(() => {
+          const match = (user?.avatar || '').match(/emoji(\d+)/);
+          const oneBased = match ? parseInt(match[1], 10) : 7;
+          const zeroBased = ((oneBased - 1) % EMOJI_SVG_URIS.length + EMOJI_SVG_URIS.length) % EMOJI_SVG_URIS.length;
+          const uri = EMOJI_SVG_URIS[zeroBased];
+          return <SvgUri uri={uri} width={120} height={120} style={styles.profileImage} />;
+        })()}
         
         {/* User Info */}
         <View style={styles.userInfo}>
@@ -270,7 +344,7 @@ export default function Profile() {
 
       {/* Navigation Tabs */}
       <View style={styles.tabBar}>
-        {["Posts", "Stories", "Connections"].map((tab) => (
+        {["Posts", "Connections"].map((tab) => (
           <View
             key={tab}
             style={[

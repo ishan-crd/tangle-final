@@ -11,6 +11,7 @@ import {
     View,
 } from "react-native";
 import { useUser } from "../../../contexts/UserContext";
+import { SvgUri } from 'react-native-svg';
 import { Post, postService } from "../../../lib/supabase";
 
 const { width } = Dimensions.get("window");
@@ -62,6 +63,32 @@ export default function HomeScreen() {
 
   const getFirstName = (fullName: string) => {
     return fullName.split(' ')[0];
+  };
+
+  const EMOJI_URIS = [
+    require("../../../assets/emojis/emoji1.svg"),
+    require("../../../assets/emojis/emoji2.svg"),
+    require("../../../assets/emojis/emoji3.svg"),
+    require("../../../assets/emojis/emoji4.svg"),
+    require("../../../assets/emojis/emoji5.svg"),
+    require("../../../assets/emojis/emoji6.svg"),
+    require("../../../assets/emojis/emoji7.svg"),
+    require("../../../assets/emojis/emoji8.svg"),
+    require("../../../assets/emojis/emoji9.svg"),
+    require("../../../assets/emojis/emoji10.svg"),
+    require("../../../assets/emojis/emoji11.svg"),
+    require("../../../assets/emojis/emoji12.svg"),
+    require("../../../assets/emojis/emoji13.svg"),
+    require("../../../assets/emojis/emoji14.svg"),
+    require("../../../assets/emojis/emoji15.svg"),
+    require("../../../assets/emojis/emoji16.svg"),
+  ].map((mod) => require('react-native').Image.resolveAssetSource(mod).uri);
+
+  const getAvatarUri = (avatar?: string) => {
+    const m = (avatar || '').match(/emoji(\d+)/);
+    const idx = m ? parseInt(m[1], 10) : 7;
+    const zero = ((idx - 1) % EMOJI_URIS.length + EMOJI_URIS.length) % EMOJI_URIS.length;
+    return EMOJI_URIS[zero];
   };
 
   const handleJoinMatchFromPost = async (post: Post) => {
@@ -138,11 +165,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.userInfo}>
             <View style={styles.avatarContainer}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {getFirstName(user?.name || 'User').charAt(0)}
-                </Text>
-              </View>
+              <SvgUri uri={getAvatarUri(user?.avatar)} width={50} height={50} />
             </View>
             <View style={styles.welcomeText}>
               <Text style={styles.welcomeSmall}>Welcome back,</Text>
@@ -211,9 +234,7 @@ export default function HomeScreen() {
               <View key={post.id} style={styles.postCard}>
                 <View style={styles.postHeader}>
                   <View style={styles.postAvatar}>
-                    <Text style={styles.postAvatarText}>
-                      {post.user_profiles?.name?.charAt(0) || 'U'}
-                    </Text>
+                    <SvgUri uri={getAvatarUri((post as any).user_profiles?.avatar)} width={40} height={40} />
                   </View>
                   <View style={styles.postUserInfo}>
                     <Text style={styles.postUsername}>
@@ -298,7 +319,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#3575EC",
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -419,7 +440,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#3575EC",
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,

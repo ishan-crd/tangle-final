@@ -12,11 +12,13 @@
 GRANT ALL PRIVILEGES ON public.groups TO authenticated;
 GRANT ALL PRIVILEGES ON public.group_members TO authenticated;
 GRANT ALL PRIVILEGES ON public.group_invitations TO authenticated;
+GRANT ALL PRIVILEGES ON public.friendships TO authenticated;
 
 -- Grant ALL PRIVILEGES on groups table to public role as well
 GRANT ALL PRIVILEGES ON public.groups TO public;
 GRANT ALL PRIVILEGES ON public.group_members TO public;
 GRANT ALL PRIVILEGES ON public.group_invitations TO public;
+GRANT ALL PRIVILEGES ON public.friendships TO public;
 
 -- =====================================================
 -- STEP 2: GRANT USAGE ON SEQUENCES

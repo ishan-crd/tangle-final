@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.groups (
     created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     max_members INTEGER DEFAULT 50,
     is_private BOOLEAN DEFAULT false,
+    icon TEXT,
+    color TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

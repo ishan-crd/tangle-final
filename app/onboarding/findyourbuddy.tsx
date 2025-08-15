@@ -11,26 +11,40 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { SvgUri } from 'react-native-svg';
+import { useUser } from "../../contexts/UserContext";
+import { supabase } from "../../lib/supabase";
 
 SplashScreen.preventAutoHideAsync();
 const { width } = Dimensions.get("window");
 
-const users = [
-  { name: "Suresh Sharma", avatar: require("../../assets/emojis/emoji1.png") },
-  { name: "Aditya Kapoor", avatar: require("../../assets/emojis/emoji2.png") },
-  { name: "Omkar Jha", avatar: require("../../assets/emojis/emoji3.png") },
-  { name: "Ayush Singh", avatar: require("../../assets/emojis/emoji4.png") },
-  { name: "Mehak Sardana", avatar: require("../../assets/emojis/emoji5.png") },
-  {
-    name: "Navya Pratap Singh",
-    avatar: require("../../assets/emojis/emoji6.png"),
-  },
-  { name: "Diya Singh", avatar: require("../../assets/emojis/emoji7.png") },
-];
+const EMOJI_URIS = [
+  require("../../assets/emojis/emoji1.svg"),
+  require("../../assets/emojis/emoji2.svg"),
+  require("../../assets/emojis/emoji3.svg"),
+  require("../../assets/emojis/emoji4.svg"),
+  require("../../assets/emojis/emoji5.svg"),
+  require("../../assets/emojis/emoji6.svg"),
+  require("../../assets/emojis/emoji7.svg"),
+  require("../../assets/emojis/emoji8.svg"),
+  require("../../assets/emojis/emoji9.svg"),
+  require("../../assets/emojis/emoji10.svg"),
+  require("../../assets/emojis/emoji11.svg"),
+  require("../../assets/emojis/emoji12.svg"),
+  require("../../assets/emojis/emoji13.svg"),
+  require("../../assets/emojis/emoji14.svg"),
+  require("../../assets/emojis/emoji15.svg"),
+  require("../../assets/emojis/emoji16.svg"),
+].map((mod) => Image.resolveAssetSource(mod).uri);
+
+type Buddy = { id: string; name: string; avatar?: string };
 
 export default function FindYourBuddy() {
   const router = useRouter();
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const { user } = useUser();
+  const [buddies, setBuddies] = useState<Buddy[]>([]);
+  const [sending, setSending] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function loadFonts() {
@@ -50,8 +64,47 @@ export default function FindYourBuddy() {
     loadFonts();
   }, []);
 
+  useEffect(() => {
+    if (!user?.society_id && !user?.society) return;
+    fetchSocietyUsers();
+  }, [user?.society_id, user?.society]);
+
+  const fetchSocietyUsers = async () => {
+    try {
+      let query = supabase.from('user_profiles').select('id, name, avatar');
+      if (user?.society_id) query = query.eq('society_id', user.society_id);
+      else if (user?.society) query = query.eq('society', user.society);
+      if (user?.id) query = query.neq('id', user.id);
+      const { data, error } = await query.order('name');
+      if (error) throw error;
+      setBuddies((data || []).map(u => ({ id: u.id, name: u.name, avatar: u.avatar })));
+    } catch (e) {
+      console.error('Error loading buddies:', e);
+      setBuddies([]);
+    }
+  };
+
+  const parseAvatarIndex = (avatar?: string) => {
+    const m = (avatar || '').match(/emoji(\d+)/);
+    const idx = m ? parseInt(m[1], 10) : 1;
+    const zero = ((idx - 1) % EMOJI_URIS.length + EMOJI_URIS.length) % EMOJI_URIS.length;
+    return zero;
+  };
+
+  const sendFriendRequest = async (friendId: string) => {
+    if (!user?.id) return;
+    try {
+      setSending(prev => new Set(prev).add(friendId));
+      const { error } = await supabase.from('friendships').insert([{ user_id: user.id, friend_id: friendId, status: 'pending' }]);
+      if (error) throw error;
+    } catch (e) {
+      console.error('Error sending request:', e);
+    } finally {
+      setSending(prev => { const n = new Set(prev); n.delete(friendId); return n; });
+    }
+  };
+
   const handleNext = () => {
-    // Navigate to the main app
     router.replace("/main");
   };
 
@@ -66,18 +119,14 @@ export default function FindYourBuddy() {
           Tap on their profiles to say hello!
         </Text>
 
-        {users.map((user, index) => (
-          <View key={index} style={styles.card}>
+        {buddies.map((b) => (
+          <View key={b.id} style={styles.card}>
             <View style={styles.userInfo}>
-              <Image source={user.avatar} style={styles.avatar} />
-              <Text style={styles.name}>{user.name}</Text>
+              <SvgUri uri={EMOJI_URIS[parseAvatarIndex(b.avatar)]} width={40} height={40} style={styles.avatar} />
+              <Text style={styles.name}>{b.name}</Text>
             </View>
-            <TouchableOpacity style={styles.iconWrapper}>
-              <Image
-                source={require("../../assets/emojis/emoji16.png")}
-                style={styles.icon}
-              />
-              {/* Replace with actual 'user-add' icon if needed */}
+            <TouchableOpacity style={styles.iconWrapper} onPress={() => sendFriendRequest(b.id)} disabled={sending.has(b.id)}>
+              <Text style={{ color: '#fff', fontSize: 16 }}>{sending.has(b.id) ? '…' : '+'}</Text>
             </TouchableOpacity>
           </View>
         ))}
@@ -143,6 +192,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     borderRadius: 12,
     padding: 8,
+    minWidth: 36,
+    alignItems: 'center'
   },
   icon: {
     width: 18,

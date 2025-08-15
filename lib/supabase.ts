@@ -133,6 +133,8 @@ export interface Group {
   updated_at: string;
   is_private: boolean;
   max_members: number;
+  icon?: string;
+  color?: string;
   member_count?: number;
   is_member?: boolean;
   user_role?: string;
@@ -166,6 +168,7 @@ export interface Post {
   society_id?: string;
   title?: string;
   content: string;
+  media_url?: string;
   post_type: 'general' | 'match' | 'tournament' | 'announcement';
   is_announcement: boolean;
   is_pinned: boolean;
@@ -241,6 +244,28 @@ export interface Like {
   post_id: string;
   user_id: string;
   created_at: string;
+}
+
+// Chat Interfaces
+export interface GroupMessage {
+  id: string;
+  group_id: string;
+  sender_id: string;
+  message_type: 'text' | 'image' | 'system';
+  content?: string;
+  media_url?: string;
+  reply_to_id?: string | null;
+  created_at: string;
+  edited_at?: string | null;
+}
+
+export interface GroupMessageReceipt {
+  id: string;
+  message_id: string;
+  user_id: string;
+  status: 'delivered' | 'read';
+  created_at: string;
+  updated_at: string;
 }
 
 // Country Service
@@ -845,6 +870,50 @@ export const tournamentService = {
     
     if (error) throw error;
     return data || [];
+  }
+};
+
+// Chat Service
+export const chatService = {
+  async getRecentMessages(groupId: string, limit: number = 50): Promise<GroupMessage[]> {
+    const { data, error } = await supabase
+      .from('group_messages')
+      .select('*')
+      .eq('group_id', groupId)
+      .order('created_at', { ascending: true })
+      .limit(limit);
+    if (error) throw error;
+    return data || [];
+  },
+
+  async sendTextMessage(groupId: string, senderId: string, content: string): Promise<GroupMessage> {
+    const { data, error } = await supabase
+      .from('group_messages')
+      .insert([{ group_id: groupId, sender_id: senderId, message_type: 'text', content }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  subscribeToGroupMessages(groupId: string, onInsert: (msg: GroupMessage) => void) {
+    const channel = supabase
+      .channel(`group_messages:${groupId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'group_messages', filter: `group_id=eq.${groupId}` }, (payload) => {
+        onInsert(payload.new as GroupMessage);
+      })
+      .subscribe();
+    return channel;
+  },
+
+  async markRead(messageId: string, userId: string): Promise<GroupMessageReceipt> {
+    const { data, error } = await supabase
+      .from('group_message_receipts')
+      .upsert({ message_id: messageId, user_id: userId, status: 'read', updated_at: new Date().toISOString() }, { onConflict: 'message_id,user_id' })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   }
 };
 

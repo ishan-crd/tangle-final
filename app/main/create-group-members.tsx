@@ -19,12 +19,13 @@ interface UserProfile {
 }
 
 export default function CreateGroupMembersScreen() {
-  const { topic, groupName, description } = useLocalSearchParams<{
+  const { topic, groupName, description, isPrivate } = useLocalSearchParams<{
     topic: string;
     groupName: string;
     description: string;
+    isPrivate?: string;
   }>();
-  const { userProfile } = useUser();
+  const { user: userProfile } = useUser();
   const [societyMembers, setSocietyMembers] = useState<UserProfile[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,11 +38,21 @@ export default function CreateGroupMembersScreen() {
   const fetchSocietyMembers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from("user_profiles")
-        .select("id, full_name, avatar_url, interests, bio")
-        .eq("society_id", userProfile?.society_id)
-        .neq("id", userProfile?.id); // Exclude current user
+        .select("id, full_name:name, avatar_url:avatar, interests, bio");
+
+      if (userProfile?.society_id) {
+        query = query.eq("society_id", userProfile.society_id);
+      } else if (userProfile?.society) {
+        query = query.eq("society", userProfile.society);
+      }
+
+      if (userProfile?.id) {
+        query = query.neq("id", userProfile.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setSocietyMembers(data || []);
@@ -63,15 +74,14 @@ export default function CreateGroupMembersScreen() {
   };
 
   const handleNext = () => {
-    // For now, navigate to review page
-    // In the future, this would go to "Group Style" page
     router.push({
-      pathname: "/main/create-group-review",
+      pathname: "/main/create-group-style",
       params: {
         topic,
         groupName,
         description,
-        selectedMembers: Array.from(selectedMembers).join(",")
+        selectedMembers: Array.from(selectedMembers).join(","),
+        isPrivate: isPrivate === "true" ? "true" : "false"
       }
     });
   };
@@ -89,7 +99,7 @@ export default function CreateGroupMembersScreen() {
     
     return (
       <TouchableOpacity
-        style={[styles.memberCard, isSelected && styles.selectedMemberCard]}
+        style={[styles.memberCard, isSelected && styles.memberCardSelected]}
         onPress={() => toggleMemberSelection(item.id)}
         activeOpacity={0.8}
       >
@@ -114,8 +124,8 @@ export default function CreateGroupMembersScreen() {
             )}
           </View>
         </View>
-        <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-          {isSelected && <Text style={styles.checkmark}>✓</Text>}
+        <View style={[styles.selectBadge, isSelected && styles.selectBadgeSelected]}>
+          {isSelected && <Text style={styles.selectBadgeText}>✓</Text>}
         </View>
       </TouchableOpacity>
     );
@@ -162,27 +172,33 @@ export default function CreateGroupMembersScreen() {
           </View>
         ) : (
           <View style={styles.membersList}>
-            {filteredMembers.slice(0, 3).map((member) => (
-              <View key={member.id} style={styles.memberCard}>
-                <View style={styles.memberInfo}>
-                  <View style={styles.avatarContainer}>
-                    {member.avatar_url ? (
-                      <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
-                    ) : (
-                      <View style={styles.defaultAvatar}>
-                        <Text style={styles.defaultAvatarText}>
-                          {member.full_name.charAt(0).toUpperCase()}
-                        </Text>
-                      </View>
-                    )}
+            {filteredMembers.slice(0, 3).map((member) => {
+              const isSelected = selectedMembers.has(member.id);
+              return (
+                <View key={member.id} style={styles.memberCard}>
+                  <View style={styles.memberInfo}>
+                    <View style={styles.avatarContainer}>
+                      {member.avatar_url ? (
+                        <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
+                      ) : (
+                        <View style={styles.defaultAvatar}>
+                          <Text style={styles.defaultAvatarText}>
+                            {member.full_name.charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.memberName}>{member.full_name}</Text>
                   </View>
-                  <Text style={styles.memberName}>{member.full_name}</Text>
+                  <TouchableOpacity
+                    style={[styles.addButton, isSelected && styles.addButtonSelected]}
+                    onPress={() => toggleMemberSelection(member.id)}
+                  >
+                    <Text style={styles.addButtonIcon}>{isSelected ? '✓' : '+'}</Text>
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.addButton}>
-                  <Text style={styles.addButtonIcon}>+</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </View>
@@ -198,27 +214,33 @@ export default function CreateGroupMembersScreen() {
         </View>
         
         <View style={styles.membersList}>
-          {filteredMembers.slice(3, 5).map((member) => (
-            <View key={member.id} style={styles.memberCard}>
-              <View style={styles.memberInfo}>
-                <View style={styles.avatarContainer}>
-                  {member.avatar_url ? (
-                    <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
-                  ) : (
-                    <View style={styles.defaultAvatar}>
-                      <Text style={styles.defaultAvatarText}>
-                        {member.full_name.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                  )}
+          {filteredMembers.slice(3, 5).map((member) => {
+            const isSelected = selectedMembers.has(member.id);
+            return (
+              <View key={member.id} style={styles.memberCard}>
+                <View style={styles.memberInfo}>
+                  <View style={styles.avatarContainer}>
+                    {member.avatar_url ? (
+                      <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
+                    ) : (
+                      <View style={styles.defaultAvatar}>
+                        <Text style={styles.defaultAvatarText}>
+                          {member.full_name.charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.memberName}>{member.full_name}</Text>
                 </View>
-                <Text style={styles.memberName}>{member.full_name}</Text>
+                <TouchableOpacity
+                  style={[styles.addButton, isSelected && styles.addButtonSelected]}
+                  onPress={() => toggleMemberSelection(member.id)}
+                >
+                  <Text style={styles.addButtonIcon}>{isSelected ? '✓' : '+'}</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.addButton}>
-                <Text style={styles.addButtonIcon}>+</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+            );
+          })}
         </View>
       </View>
 
@@ -351,6 +373,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E0E0E0",
   },
+  memberCardSelected: {
+    borderColor: "#000000",
+    backgroundColor: "#F7F7F7",
+  },
   memberInfo: {
     flexDirection: "row",
     alignItems: "center",
@@ -398,10 +424,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  addButtonSelected: {
+    backgroundColor: "#4CAF50",
+  },
   addButtonIcon: {
     color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  selectBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  selectBadgeSelected: {
+    backgroundColor: "#4CAF50",
+    borderColor: "#4CAF50",
+  },
+  selectBadgeText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
 
   // Button
