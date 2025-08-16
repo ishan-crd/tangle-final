@@ -11,9 +11,9 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
+import { SvgUri } from 'react-native-svg';
 import { useUser } from "../../contexts/UserContext";
 import { Group, groupsService, supabase } from "../../lib/supabase";
-import { SvgUri } from 'react-native-svg';
 
 const EMOJI_URIS = [
   require("../../assets/emojis/emoji1.svg"),
@@ -90,7 +90,7 @@ function GroupCard({ item, onPress, onJoin, onLeave }: { item: Group; onPress: (
           <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: (item as any).color || '#EEE', alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>
             <Text style={{ fontSize: 12 }}>{(item as any).icon || '📱'}</Text>
           </View>
-          <Text style={{ fontSize: 12, color: '#666' }}>Styled</Text>
+          <Text style={{ fontSize: 12, color: '#666' }}>{item.is_private ? 'Private' : 'Public'}</Text>
         </View>
       ) : null}
       <Text style={styles.memberCount}>

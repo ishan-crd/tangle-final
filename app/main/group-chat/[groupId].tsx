@@ -1,7 +1,9 @@
-import { useLocalSearchParams, router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, Image } from "react-native";
+import { FlatList, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SvgUri } from 'react-native-svg';
 import { useUser } from "../../../contexts/UserContext";
+import { getEmojiUriFromKey } from "../../../lib/avatar";
 import { chatService, supabase } from "../../../lib/supabase";
 
 interface ChatMessageUI {
@@ -74,12 +76,15 @@ export default function GroupChatScreen() {
     const isMe = item.user_id === user?.id;
     const profile = profiles[item.user_id];
     const avatarUri = profile?.avatar;
+    const emojiUri = getEmojiUriFromKey(avatarUri);
     const initials = (profile?.name || '?').charAt(0).toUpperCase();
     return (
       <View style={[styles.messageRow, isMe ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' }]}>
         {!isMe && (
-          avatarUri ? (
+          avatarUri && !emojiUri ? (
             <Image source={{ uri: avatarUri }} style={styles.avatar} />
+          ) : emojiUri ? (
+            <SvgUri uri={emojiUri} width={32} height={32} />
           ) : (
             <View style={styles.defaultAvatar}><Text style={styles.defaultAvatarText}>{initials}</Text></View>
           )
@@ -88,8 +93,10 @@ export default function GroupChatScreen() {
           <Text style={styles.bubbleText}>{item.content}</Text>
         </View>
         {isMe && (
-          avatarUri ? (
+          avatarUri && !emojiUri ? (
             <Image source={{ uri: avatarUri }} style={styles.avatar} />
+          ) : emojiUri ? (
+            <SvgUri uri={emojiUri} width={32} height={32} />
           ) : (
             <View style={styles.defaultAvatar}><Text style={styles.defaultAvatarText}>{initials}</Text></View>
           )

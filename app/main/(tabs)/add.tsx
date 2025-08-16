@@ -10,10 +10,8 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View,
-    Image
+    View
 } from "react-native";
-import * as ImagePicker from 'expo-image-picker';
 import { useUser } from "../../../contexts/UserContext";
 import { matchService, postService } from "../../../lib/supabase";
 
@@ -26,7 +24,7 @@ export default function AddScreen() {
   const [postContent, setPostContent] = useState("");
   const [postTitle, setPostTitle] = useState("");
   const [isPosting, setIsPosting] = useState(false);
-  const [imageUri, setImageUri] = useState<string | null>(null);
+  
   
   // Match creation states
   const [matchTitle, setMatchTitle] = useState("");
@@ -70,7 +68,6 @@ export default function AddScreen() {
         society_id: societyId,
         title: postTitle.trim() || undefined,
         content: postContent.trim(),
-        media_url: imageUri || undefined,
         post_type: "general",
         is_announcement: false,
         is_pinned: false,
@@ -81,7 +78,6 @@ export default function AddScreen() {
       Alert.alert("Success", "Post created successfully!");
       setPostContent("");
       setPostTitle("");
-      setImageUri(null);
       setShowModal(false);
     } catch (error) {
       console.error('Error creating post:', error);
@@ -205,29 +201,7 @@ export default function AddScreen() {
                 />
               </View>
 
-              <View style={[styles.inputSection, { marginTop: -10 }]}> 
-                {imageUri ? (
-                  <View style={{ alignItems: 'center', marginBottom: 10 }}>
-                    <Image source={{ uri: imageUri }} style={{ width: width - 60, height: (width - 60) * 0.6, borderRadius: 12 }} />
-                  </View>
-                ) : null}
-                <TouchableOpacity
-                  style={[styles.addImageButton, imageUri && { backgroundColor: '#E8F5E9' }]}
-                  onPress={async () => {
-                    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                    if (status !== 'granted') {
-                      Alert.alert('Permission needed', 'We need camera roll permission to select images');
-                      return;
-                    }
-                    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
-                    if (!result.canceled) {
-                      setImageUri(result.assets[0].uri);
-                    }
-                  }}
-                >
-                  <Text style={styles.addImageText}>{imageUri ? 'Change Image' : 'Add Image'}</Text>
-                </TouchableOpacity>
-              </View>
+              {/* Image upload removed */}
 
               <View style={styles.characterCount}>
                 <Text style={styles.characterCountText}>

@@ -7,7 +7,9 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
+import { SvgUri } from 'react-native-svg';
 import { useUser } from "../../contexts/UserContext";
+import { getEmojiUriFromKey, isLikelyRemoteUri } from "../../lib/avatar";
 import { supabase } from "../../lib/supabase";
 
 interface UserProfile {
@@ -105,8 +107,10 @@ export default function CreateGroupMembersScreen() {
       >
         <View style={styles.memberInfo}>
           <View style={styles.avatarContainer}>
-            {item.avatar_url ? (
-              <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+            {isLikelyRemoteUri(item.avatar_url) ? (
+              <Image source={{ uri: item.avatar_url as string }} style={styles.avatar} />
+            ) : getEmojiUriFromKey(item.avatar_url) ? (
+              <SvgUri uri={getEmojiUriFromKey(item.avatar_url) as string} width={48} height={48} />
             ) : (
               <View style={styles.defaultAvatar}>
                 <Text style={styles.defaultAvatarText}>
@@ -178,8 +182,10 @@ export default function CreateGroupMembersScreen() {
                 <View key={member.id} style={styles.memberCard}>
                   <View style={styles.memberInfo}>
                     <View style={styles.avatarContainer}>
-                      {member.avatar_url ? (
-                        <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
+                      {isLikelyRemoteUri(member.avatar_url) ? (
+                        <Image source={{ uri: member.avatar_url as string }} style={styles.avatar} />
+                      ) : getEmojiUriFromKey(member.avatar_url) ? (
+                        <SvgUri uri={getEmojiUriFromKey(member.avatar_url) as string} width={48} height={48} />
                       ) : (
                         <View style={styles.defaultAvatar}>
                           <Text style={styles.defaultAvatarText}>
@@ -220,8 +226,10 @@ export default function CreateGroupMembersScreen() {
               <View key={member.id} style={styles.memberCard}>
                 <View style={styles.memberInfo}>
                   <View style={styles.avatarContainer}>
-                    {member.avatar_url ? (
-                      <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
+                    {isLikelyRemoteUri(member.avatar_url) ? (
+                      <Image source={{ uri: member.avatar_url as string }} style={styles.avatar} />
+                    ) : getEmojiUriFromKey(member.avatar_url) ? (
+                      <SvgUri uri={getEmojiUriFromKey(member.avatar_url) as string} width={48} height={48} />
                     ) : (
                       <View style={styles.defaultAvatar}>
                         <Text style={styles.defaultAvatarText}>
