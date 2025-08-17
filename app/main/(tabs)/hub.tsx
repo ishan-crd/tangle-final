@@ -1,12 +1,13 @@
 import { router } from "expo-router";
 import {
-  ImageBackground,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ImageBackground,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 
 export default function HubScreen() {
@@ -78,7 +79,9 @@ export default function HubScreen() {
             </View>
             <Text style={styles.eventTitle}>Tournaments</Text>
             <Text style={styles.eventDescription}>Time to prove you're not just bragging in the WhatsApp group</Text>
-            <Text style={styles.eventIcon}>🏆</Text>
+            {Platform.OS === "ios" ? (
+              <Text style={styles.eventIcon}>🏆</Text>
+            ) : null}
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -90,9 +93,11 @@ export default function HubScreen() {
             </View>
             <Text style={styles.eventTitle}>Community Events</Text>
             <Text style={styles.eventDescription}>Fun guaranteed your time back!</Text>
-            <View style={styles.globeContainer}>
-              <Text style={styles.globeIcon}>🌐</Text>
-            </View>
+            {Platform.OS === "ios" ? (
+              <View style={styles.globeContainer}>
+                <Text style={styles.globeIcon}>🌐</Text>
+              </View>
+            ) : null}
           </TouchableOpacity>
         </View>
       </View>
@@ -134,9 +139,11 @@ export default function HubScreen() {
           <TouchableOpacity style={[styles.bottomCard, styles.announcementsCard]}>
             <Text style={styles.bottomCardTitle}>Announcements</Text>
             <Text style={styles.bottomCardDescription}>Society news that actually matters</Text>
-            <View style={styles.lockedContent}>
-              <Text style={styles.largeLockIcon}>🔒</Text>
-            </View>
+            {Platform.OS === "ios" ? (
+              <View style={styles.lockedContent}>
+                <Text style={styles.largeLockIcon}>🔒</Text>
+              </View>
+            ) : null}
           </TouchableOpacity>
         </View>
       </View>
@@ -148,7 +155,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8F9FA",
-    paddingTop: 50, // Add top padding for status bar
+    paddingTop: Platform.OS === "android" ? 0 : 50, // Remove gap on Android
   },
   
   // Search Section
@@ -213,7 +220,7 @@ const styles = StyleSheet.create({
   },
   eventCard: {
     width: "48%",
-    aspectRatio: 1, // Make cards square
+    aspectRatio: Platform.OS === "android" ? 1.1 : 1, // Slightly taller on Android for emoji visibility
     borderRadius: 16,
     padding: 15,
     marginHorizontal: 5,
@@ -250,8 +257,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   eventIcon: {
-    fontSize: 28,
+    fontSize: Platform.OS === "android" ? 36 : 28,
+    lineHeight: Platform.OS === "android" ? 42 : undefined,
     textAlign: "center",
+    includeFontPadding: false,
   },
   lockedContent: {
     alignItems: "center",
@@ -263,8 +272,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   globeIcon: {
-    fontSize: 32,
+    fontSize: Platform.OS === "android" ? 40 : 32,
+    lineHeight: Platform.OS === "android" ? 44 : undefined,
     textAlign: "center",
+    includeFontPadding: false,
   },
   globeContainer: {
     alignItems: "center",
@@ -369,7 +380,7 @@ const styles = StyleSheet.create({
   },
   bottomCard: {
     width: "48%",
-    aspectRatio: 1, // Make cards square
+    aspectRatio: Platform.OS === "android" ? 1.1 : 1, // Slightly taller on Android
     borderRadius: 16,
     padding: 15,
     marginHorizontal: 5,
@@ -408,8 +419,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cardIcon: {
-    fontSize: 36,
+    fontSize: Platform.OS === "android" ? 44 : 36,
+    lineHeight: Platform.OS === "android" ? 48 : undefined,
     marginBottom: 8,
+    includeFontPadding: false,
   },
   cardTitle: {
     fontSize: 16,

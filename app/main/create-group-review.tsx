@@ -1,13 +1,14 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
+    ActivityIndicator,
+    Alert,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useUser } from "../../contexts/UserContext";
 import { groupsService, supabase } from "../../lib/supabase";
@@ -237,13 +238,13 @@ const styles = StyleSheet.create({
   // Header
   header: {
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: Platform.OS === "android" ? 20 : 60,
     paddingBottom: 20,
     alignItems: "center",
   },
   backButton: {
     position: "absolute",
-    top: 60,
+    top: Platform.OS === "android" ? 20 : 60,
     left: 20,
     padding: 8,
   },

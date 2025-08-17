@@ -215,10 +215,17 @@ export default function ProfileBasic() {
             </TouchableOpacity>
           </View>
         </View>
+        {Platform.OS === "android" ? (
+          <Text style={styles.footerTextAndroid}>
+            Don't worry, we won't ask for your blood type… yet 😜
+          </Text>
+        ) : null}
       </ScrollView>
-      <Text style={styles.footerText}>
-        Don't worry, we won't ask for your blood type… yet 😜
-      </Text>
+      {Platform.OS === "ios" ? (
+        <Text style={styles.footerText}>
+          Don't worry, we won't ask for your blood type… yet 😜
+        </Text>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
@@ -342,5 +349,13 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 0,
     right: 0,
+  },
+  footerTextAndroid: {
+    textAlign: "center",
+    fontSize: 14,
+    fontFamily: "Montserrat-Bold",
+    color: "#1A1A1A",
+    marginTop: 20,
+    marginBottom: 30,
   },
 });

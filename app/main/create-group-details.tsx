@@ -1,12 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Keyboard,
+    Keyboard,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function CreateGroupDetailsScreen() {
@@ -162,13 +163,13 @@ const styles = StyleSheet.create({
   // Header
   header: {
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: Platform.OS === "android" ? 20 : 60,
     paddingBottom: 30,
     alignItems: "center",
   },
   backButton: {
     position: "absolute",
-    top: 60,
+    top: Platform.OS === "android" ? 20 : 60,
     left: 20,
     padding: 8,
   },

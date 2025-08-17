@@ -1,15 +1,16 @@
 import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Dimensions,
-  Image,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    Image,
+    Platform,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 // Prevent splash screen from auto-hiding
@@ -184,7 +185,7 @@ const styles = StyleSheet.create({
   bottomButton: {
     position: "absolute",
     top: 552,
-    left: 128,
+    left: Platform.OS === "android" ? (width - 144) / 2 : 128,
     backgroundColor: "#C0D9BF",
     width: 144,
     height: 46,

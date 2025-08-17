@@ -1,16 +1,16 @@
 import * as Font from "expo-font";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Dimensions,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 SplashScreen.preventAutoHideAsync();
@@ -101,7 +101,9 @@ export default function Notifications() {
         </View>
       </View>
 
-      <Text style={styles.footerText}>Don’t worry, we won’t spam… much</Text>
+      {Platform.OS === "ios" ? (
+        <Text style={styles.footerText}>Don’t worry, we won’t spam… much</Text>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
@@ -112,7 +114,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFAFA",
   },
   contentContainer: {
-    marginTop: 100,
+    marginTop: Platform.OS === "android" ? 60 : 100,
     paddingHorizontal: 24,
   },
   title: {

@@ -2,16 +2,17 @@ import { createClient } from '@supabase/supabase-js';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useUser } from "../../../contexts/UserContext";
 import { SvgUri } from 'react-native-svg';
+import { useUser } from "../../../contexts/UserContext";
 import { Post } from "../../../lib/supabase";
 
 const supabase = createClient('https://lrqrxyqrmwrbsxgiyuio.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycXJ4eXFybXdyYnN4Z2l5dWlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDI5MDgsImV4cCI6MjA2OTc3ODkwOH0.2wjV1fNp2oRxzlbHd5pZNVfOzHrNI5Q-s6-Rc3Qdoq4');
@@ -379,14 +380,14 @@ const styles = StyleSheet.create({
   },
   profileHeader: {
     backgroundColor: "#E8F5E8",
-    paddingTop: 60,
+    paddingTop: Platform.OS === "android" ? 20 : 60,
     paddingBottom: 30,
     alignItems: "center",
     position: "relative",
   },
   headerActions: {
     position: "absolute",
-    top: 60,
+    top: Platform.OS === "android" ? 20 : 60,
     left: 0,
     right: 0,
     flexDirection: "row",

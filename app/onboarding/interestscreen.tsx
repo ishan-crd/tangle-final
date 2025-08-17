@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
     Alert,
     Dimensions,
+    Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -127,10 +128,12 @@ export default function InterestScreen() {
           </Text>
         </TouchableOpacity>
 
-        {/* Footer */}
-        <Text style={styles.footerText}>
-          No judgment if you pick 'Pets' over 'Fitness' 😌
-        </Text>
+        {/* Footer (hide on Android) */}
+        {Platform.OS === "ios" ? (
+          <Text style={styles.footerText}>
+            No judgment if you pick 'Pets' over 'Fitness' 😌
+          </Text>
+        ) : null}
       </View>
     </View>
   );
@@ -181,7 +184,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    paddingTop: 90,
+    paddingTop: Platform.OS === "android" ? 40 : 90,
     paddingBottom: 24,
     paddingHorizontal: 24,
     justifyContent: "space-between",

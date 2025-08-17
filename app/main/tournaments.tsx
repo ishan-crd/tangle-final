@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -294,7 +295,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: 60,
+    paddingTop: Platform.OS === "android" ? 20 : 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
     backgroundColor: "#FFFFFF",

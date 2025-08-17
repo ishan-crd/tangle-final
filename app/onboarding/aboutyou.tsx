@@ -136,12 +136,19 @@ export default function AboutYou() {
             </TouchableOpacity>
           </View>
         </View>
+        {Platform.OS === "android" ? (
+          <Text style={styles.footerTextAndroid}>
+            We won't tell anyone if you copy-paste it from Google 😏
+          </Text>
+        ) : null}
       </ScrollView>
       
-      {/* Footer */}
-      <Text style={styles.footerText}>
-        We won't tell anyone if you copy-paste it from Google 😏
-      </Text>
+      {/* Footer (iOS only) */}
+      {Platform.OS === "ios" ? (
+        <Text style={styles.footerText}>
+          We won't tell anyone if you copy-paste it from Google 😏
+        </Text>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
@@ -238,5 +245,13 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 0,
     right: 0,
+  },
+  footerTextAndroid: {
+    textAlign: "center",
+    fontSize: 11,
+    fontFamily: "Montserrat-Bold",
+    color: "#000000",
+    marginTop: 20,
+    marginBottom: 30,
   },
 });

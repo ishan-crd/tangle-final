@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { FlatList, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { FlatList, Image, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SvgUri } from 'react-native-svg';
 import { useUser } from "../../../contexts/UserContext";
 import { getEmojiUriFromKey } from "../../../lib/avatar";
@@ -21,6 +21,9 @@ export default function GroupChatScreen() {
   const [loading, setLoading] = useState(false);
   const [profiles, setProfiles] = useState<Record<string, { name: string; avatar?: string }>>({});
   const [hasSubscribed, setHasSubscribed] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [inputBarHeight, setInputBarHeight] = useState(0);
+  const ANDROID_EXTRA_OFFSET = 36;
   const listRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -49,6 +52,20 @@ export default function GroupChatScreen() {
     load();
     return () => { if (channel) supabase.removeChannel(channel); };
   }, [groupId]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(e.endCoordinates?.height || 0);
+    });
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -123,11 +140,26 @@ export default function GroupChatScreen() {
         renderItem={renderItem}
         ref={listRef as any}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ 
+          padding: 16,
+          paddingBottom: (
+            Platform.OS === 'android'
+              ? ((keyboardHeight > 0 ? keyboardHeight + ANDROID_EXTRA_OFFSET : 0) + inputBarHeight + 16)
+              : (inputBarHeight + 16)
+          )
+        }}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       />
 
-      <View style={styles.inputBar}>
+      <View 
+        style={[
+          styles.inputBar, 
+          Platform.OS === 'android'
+            ? { position: 'absolute', left: 0, right: 0, bottom: (keyboardHeight > 0 ? keyboardHeight + ANDROID_EXTRA_OFFSET : 0), marginBottom: 0 }
+            : null
+        ]}
+        onLayout={(e) => setInputBarHeight(e.nativeEvent.layout.height)}
+      >
         <TextInput
           style={styles.textInput}
           placeholder="Type a message"
@@ -146,8 +178,8 @@ export default function GroupChatScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { paddingTop: 60, paddingBottom: 12, paddingHorizontal: 16, alignItems: 'center' },
-  backButton: { position: 'absolute', left: 16, top: 60, padding: 8 },
+  header: { paddingTop: Platform.OS === 'android' ? 20 : 60, paddingBottom: 12, paddingHorizontal: 16, alignItems: 'center' },
+  backButton: { position: 'absolute', left: 16, top: Platform.OS === 'android' ? 20 : 60, padding: 8 },
   backText: { fontSize: 22, fontWeight: 'bold' },
   groupBadge: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   groupIcon: { fontSize: 28 },

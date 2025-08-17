@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from "react-native";
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useUser } from "../../contexts/UserContext";
 import { groupsService } from "../../lib/supabase";
 
@@ -137,8 +137,8 @@ export default function CreateGroupStyleScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFFFFF" },
-  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20, alignItems: "center" },
-  backButton: { position: "absolute", top: 60, left: 20, padding: 8 },
+  header: { paddingHorizontal: 20, paddingTop: Platform.OS === "android" ? 20 : 60, paddingBottom: 20, alignItems: "center" },
+  backButton: { position: "absolute", top: Platform.OS === "android" ? 20 : 60, left: 20, padding: 8 },
   backButtonText: { fontSize: 24, color: "#000000", fontWeight: "bold" },
   progressContainer: { marginTop: 20, marginBottom: 20 },
   progressBar: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -147,8 +147,21 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: "bold", color: "#000000", marginBottom: 10, textAlign: "center" },
   subtitle: { fontSize: 16, color: "#666666", textAlign: "center", lineHeight: 22, paddingHorizontal: 20 },
   content: { paddingHorizontal: 20, paddingBottom: 20 },
-  previewCircle: { width: 140, height: 140, borderRadius: 70, alignSelf: "center", justifyContent: "center", alignItems: "center", marginVertical: 10 },
-  previewIcon: { fontSize: 110 },
+  previewCircle: { 
+    width: Platform.OS === "android" ? 160 : 140, 
+    height: Platform.OS === "android" ? 160 : 140, 
+    borderRadius: Platform.OS === "android" ? 80 : 70, 
+    alignSelf: "center", 
+    justifyContent: "center", 
+    alignItems: "center", 
+    marginVertical: 10 
+  },
+  previewIcon: {
+    fontSize: Platform.OS === "android" ? 104 : 110,
+    lineHeight: Platform.OS === "android" ? 116 : undefined,
+    includeFontPadding: false,
+    textAlign: "center",
+  },
   card: { backgroundColor: "#FFFFFF", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#E0E0E0", marginBottom: 16 },
   cardTitle: { fontSize: 16, fontWeight: "600", color: "#000000", marginBottom: 12 },
   palette: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
