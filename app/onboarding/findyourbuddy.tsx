@@ -4,38 +4,20 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import {
     Dimensions,
-    Image,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
-import { SvgUri } from 'react-native-svg';
+import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../contexts/UserContext";
 import { supabase } from "../../lib/supabase";
+import { ensureEmojiXmlLoaded, getEmojiXmlFromKey } from "../../lib/avatar";
 
 SplashScreen.preventAutoHideAsync();
 const { width } = Dimensions.get("window");
 
-const EMOJI_URIS = [
-  require("../../assets/emojis/emoji1.svg"),
-  require("../../assets/emojis/emoji2.svg"),
-  require("../../assets/emojis/emoji3.svg"),
-  require("../../assets/emojis/emoji4.svg"),
-  require("../../assets/emojis/emoji5.svg"),
-  require("../../assets/emojis/emoji6.svg"),
-  require("../../assets/emojis/emoji7.svg"),
-  require("../../assets/emojis/emoji8.svg"),
-  require("../../assets/emojis/emoji9.svg"),
-  require("../../assets/emojis/emoji10.svg"),
-  require("../../assets/emojis/emoji11.svg"),
-  require("../../assets/emojis/emoji12.svg"),
-  require("../../assets/emojis/emoji13.svg"),
-  require("../../assets/emojis/emoji14.svg"),
-  require("../../assets/emojis/emoji15.svg"),
-  require("../../assets/emojis/emoji16.svg"),
-].map((mod) => Image.resolveAssetSource(mod).uri);
 
 type Buddy = { id: string; name: string; avatar?: string };
 
@@ -54,6 +36,7 @@ export default function FindYourBuddy() {
           "Montserrat-SemiBold": require("../../assets/fonts/Montserrat-SemiBold.ttf"),
           "Montserrat-Light": require("../../assets/fonts/Montserrat-Light.ttf"),
         });
+        await ensureEmojiXmlLoaded();
         setFontsLoaded(true);
         SplashScreen.hideAsync();
       } catch (error) {
@@ -84,12 +67,7 @@ export default function FindYourBuddy() {
     }
   };
 
-  const parseAvatarIndex = (avatar?: string) => {
-    const m = (avatar || '').match(/emoji(\d+)/);
-    const idx = m ? parseInt(m[1], 10) : 1;
-    const zero = ((idx - 1) % EMOJI_URIS.length + EMOJI_URIS.length) % EMOJI_URIS.length;
-    return zero;
-  };
+  const getAvatarXml = (avatar?: string) => getEmojiXmlFromKey(avatar || undefined);
 
   const sendFriendRequest = async (friendId: string) => {
     if (!user?.id) return;
@@ -122,7 +100,13 @@ export default function FindYourBuddy() {
         {buddies.map((b) => (
           <View key={b.id} style={styles.card}>
             <View style={styles.userInfo}>
-              <SvgUri uri={EMOJI_URIS[parseAvatarIndex(b.avatar)]} width={40} height={40} style={styles.avatar} />
+              {getAvatarXml(b.avatar) ? (
+                <SvgXml xml={getAvatarXml(b.avatar) as string} width={40} height={40} style={styles.avatar} />
+              ) : (
+                <View style={[styles.avatar, { backgroundColor: '#EEE', alignItems: 'center', justifyContent: 'center' }]}>
+                  <Text style={{ fontWeight: '700', color: '#666' }}>{(b.name || '?').charAt(0).toUpperCase()}</Text>
+                </View>
+              )}
               <Text style={styles.name}>{b.name}</Text>
             </View>
             <TouchableOpacity style={styles.iconWrapper} onPress={() => sendFriendRequest(b.id)} disabled={sending.has(b.id)}>

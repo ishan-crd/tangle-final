@@ -10,8 +10,9 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../../contexts/UserContext";
-import { SvgUri } from 'react-native-svg';
+import { ensureEmojiXmlLoaded, getEmojiXmlFromKey } from "../../../lib/avatar";
 import { Post, postService } from "../../../lib/supabase";
 
 const { width } = Dimensions.get("window");
@@ -25,6 +26,7 @@ export default function HomeScreen() {
   const [joiningMatches, setJoiningMatches] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    ensureEmojiXmlLoaded();
     loadPosts();
   }, [user]);
 
@@ -65,31 +67,7 @@ export default function HomeScreen() {
     return fullName.split(' ')[0];
   };
 
-  const EMOJI_URIS = [
-    require("../../../assets/emojis/emoji1.svg"),
-    require("../../../assets/emojis/emoji2.svg"),
-    require("../../../assets/emojis/emoji3.svg"),
-    require("../../../assets/emojis/emoji4.svg"),
-    require("../../../assets/emojis/emoji5.svg"),
-    require("../../../assets/emojis/emoji6.svg"),
-    require("../../../assets/emojis/emoji7.svg"),
-    require("../../../assets/emojis/emoji8.svg"),
-    require("../../../assets/emojis/emoji9.svg"),
-    require("../../../assets/emojis/emoji10.svg"),
-    require("../../../assets/emojis/emoji11.svg"),
-    require("../../../assets/emojis/emoji12.svg"),
-    require("../../../assets/emojis/emoji13.svg"),
-    require("../../../assets/emojis/emoji14.svg"),
-    require("../../../assets/emojis/emoji15.svg"),
-    require("../../../assets/emojis/emoji16.svg"),
-  ].map((mod) => require('react-native').Image.resolveAssetSource(mod).uri);
-
-  const getAvatarUri = (avatar?: string) => {
-    const m = (avatar || '').match(/emoji(\d+)/);
-    const idx = m ? parseInt(m[1], 10) : 7;
-    const zero = ((idx - 1) % EMOJI_URIS.length + EMOJI_URIS.length) % EMOJI_URIS.length;
-    return EMOJI_URIS[zero];
-  };
+  const getAvatarXml = (avatar?: string) => getEmojiXmlFromKey(avatar || undefined);
 
   const handleJoinMatchFromPost = async (post: Post) => {
     if (!user?.id) {
@@ -165,7 +143,13 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.userInfo}>
             <View style={styles.avatarContainer}>
-              <SvgUri uri={getAvatarUri(user?.avatar)} width={50} height={50} />
+              {getAvatarXml(user?.avatar) ? (
+                <SvgXml xml={getAvatarXml(user?.avatar) as string} width={50} height={50} />
+              ) : (
+                <View style={[styles.avatar, { backgroundColor: '#EEE', alignItems: 'center', justifyContent: 'center' }]}>
+                  <Text style={{ fontWeight: '700', color: '#666' }}>{getFirstName(user?.name || 'U').charAt(0).toUpperCase()}</Text>
+                </View>
+              )}
             </View>
             <View style={styles.welcomeText}>
               <Text style={styles.welcomeSmall}>Welcome back,</Text>
@@ -234,7 +218,13 @@ export default function HomeScreen() {
               <View key={post.id} style={styles.postCard}>
                 <View style={styles.postHeader}>
                   <View style={styles.postAvatar}>
-                    <SvgUri uri={getAvatarUri((post as any).user_profiles?.avatar)} width={40} height={40} />
+                    {getAvatarXml((post as any).user_profiles?.avatar) ? (
+                      <SvgXml xml={getAvatarXml((post as any).user_profiles?.avatar) as string} width={40} height={40} />
+                    ) : (
+                      <View style={[styles.postAvatar, { backgroundColor: '#EEE', alignItems: 'center', justifyContent: 'center' }]}>
+                        <Text style={{ fontWeight: '700', color: '#666' }}>{(post.user_profiles?.name || 'U').charAt(0).toUpperCase()}</Text>
+                      </View>
+                    )}
                   </View>
                   <View style={styles.postUserInfo}>
                     <Text style={styles.postUsername}>

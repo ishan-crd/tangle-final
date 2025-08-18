@@ -3,16 +3,17 @@ import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import {
-  Dimensions,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    Platform
 } from "react-native";
-import { SvgUri } from 'react-native-svg';
+import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../contexts/UserContext";
+import { ensureEmojiXmlLoaded, getEmojiXmlFromKey } from '../../lib/avatar';
 
 SplashScreen.preventAutoHideAsync();
 const { width } = Dimensions.get("window");
@@ -24,7 +25,7 @@ export default function EmojiAvatarScreen() {
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
   useEffect(() => {
-    async function loadFonts() {
+    async function prepare() {
       try {
         await Font.loadAsync({
           "NeuePlak-ExtendedBold": require("../../assets/fonts/Neue-Plak-Extended-Bold.ttf"),
@@ -32,35 +33,19 @@ export default function EmojiAvatarScreen() {
           "Montserrat-Light": require("../../assets/fonts/Montserrat-Light.ttf"),
           "Montserrat-Bold": require("../../assets/fonts/Montserrat-Bold.ttf"),
         });
+        await ensureEmojiXmlLoaded();
         setFontsLoaded(true);
         SplashScreen.hideAsync();
       } catch (error) {
-        console.error("Font loading error", error);
+        console.error("Font/SVG loading error", error);
       }
     }
-    loadFonts();
+    prepare();
   }, []);
 
   if (!fontsLoaded) return null;
 
-  const EMOJI_URIS = [
-    require("../../assets/emojis/emoji1.svg"),
-    require("../../assets/emojis/emoji2.svg"),
-    require("../../assets/emojis/emoji3.svg"),
-    require("../../assets/emojis/emoji4.svg"),
-    require("../../assets/emojis/emoji5.svg"),
-    require("../../assets/emojis/emoji6.svg"),
-    require("../../assets/emojis/emoji7.svg"),
-    require("../../assets/emojis/emoji8.svg"),
-    require("../../assets/emojis/emoji9.svg"),
-    require("../../assets/emojis/emoji10.svg"),
-    require("../../assets/emojis/emoji11.svg"),
-    require("../../assets/emojis/emoji12.svg"),
-    require("../../assets/emojis/emoji13.svg"),
-    require("../../assets/emojis/emoji14.svg"),
-    require("../../assets/emojis/emoji15.svg"),
-    require("../../assets/emojis/emoji16.svg"),
-  ].map(mod => Image.resolveAssetSource(mod).uri);
+  const EMOJI_XMLS = Array.from({ length: 16 }, (_, i) => getEmojiXmlFromKey(`emoji${i + 1}`));
 
   const bgColors = [
     "#FFEFAA", "#E0F7FA", "#EDE7F6", "#E8F5E9", "#FFF3E0",
@@ -69,7 +54,7 @@ export default function EmojiAvatarScreen() {
     "#EDEDED"
   ];
 
-  const selectedUri = EMOJI_URIS[selectedIndex % EMOJI_URIS.length];
+  const selectedXml = EMOJI_XMLS[selectedIndex % EMOJI_XMLS.length] as string;
   const selectedBg = bgColors[selectedIndex % bgColors.length];
 
   const handleSelect = (index: number) => {
@@ -102,18 +87,22 @@ export default function EmojiAvatarScreen() {
       </Text>
 
       <View style={[styles.previewCard, { backgroundColor: selectedBg }]}> 
-        <SvgUri uri={selectedUri} width={(width - 48) * 0.6} height={(width - 48) * 0.6} />
+        {!!selectedXml && (
+          <SvgXml xml={selectedXml} width={(width - 48) * 0.6} height={(width - 48) * 0.6} />
+        )}
       </View>
 
       <View style={styles.emojiGrid}>
-        {EMOJI_URIS.map((uri, index) => (
+        {EMOJI_XMLS.map((xml, index) => (
           <TouchableOpacity
             key={index}
             onPress={() => handleSelect(index)}
             style={[styles.emojiTile, { backgroundColor: bgColors[index % bgColors.length] }, selectedIndex === index && styles.emojiTileSelected]}
             activeOpacity={0.8}
           >
-            <SvgUri uri={uri} width={(width - 80) / 4} height={(width - 80) / 4} />
+            {!!xml && (
+              <SvgXml xml={xml as string} width={(width - 80) / 4} height={(width - 80) / 4} />
+            )}
           </TouchableOpacity>
         ))}
       </View>
@@ -133,7 +122,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     backgroundColor: "#FAFAFA",
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'android' ? 24 : 60,
   },
   title: {
     fontSize: 32,

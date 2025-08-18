@@ -3,43 +3,21 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
     Alert,
-    Image,
     Platform,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
-import { SvgUri } from 'react-native-svg';
+import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../../contexts/UserContext";
+import { ensureEmojiXmlLoaded, getEmojiXmlFromKey } from "../../../lib/avatar";
 import { Post } from "../../../lib/supabase";
 
 const supabase = createClient('https://lrqrxyqrmwrbsxgiyuio.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycXJ4eXFybXdyYnN4Z2l5dWlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDI5MDgsImV4cCI6MjA2OTc3ODkwOH0.2wjV1fNp2oRxzlbHd5pZNVfOzHrNI5Q-s6-Rc3Qdoq4');
 
-// Pre-resolve all emoji SVG asset URIs
-const EMOJI_SVG_URIS = [
-  require("../../../assets/emojis/emoji1.svg"),
-  require("../../../assets/emojis/emoji2.svg"),
-  require("../../../assets/emojis/emoji3.svg"),
-  require("../../../assets/emojis/emoji4.svg"),
-  require("../../../assets/emojis/emoji5.svg"),
-  require("../../../assets/emojis/emoji6.svg"),
-  require("../../../assets/emojis/emoji7.svg"),
-  require("../../../assets/emojis/emoji8.svg"),
-  require("../../../assets/emojis/emoji9.svg"),
-  require("../../../assets/emojis/emoji10.svg"),
-  require("../../../assets/emojis/emoji11.svg"),
-  require("../../../assets/emojis/emoji12.svg"),
-  require("../../../assets/emojis/emoji13.svg"),
-  require("../../../assets/emojis/emoji14.svg"),
-  require("../../../assets/emojis/emoji15.svg"),
-].map((mod) => Image.resolveAssetSource(mod).uri);
-
-const getEmojiUriFromIndex = (idx: number) => {
-  const safe = ((idx % EMOJI_SVG_URIS.length) + EMOJI_SVG_URIS.length) % EMOJI_SVG_URIS.length;
-  return EMOJI_SVG_URIS[safe];
-};
+useEffect(() => { ensureEmojiXmlLoaded(); }, []);
 
 const bestFriends = [
   { name: "Navya Talwar", distance: "<1 km", emojiIndex: 0 },
@@ -238,7 +216,13 @@ export default function Profile() {
               userPosts.map((post, index) => (
                 <View key={index} style={styles.postCard}>
                   <View style={styles.postHeader}>
-                    <SvgUri uri={getEmojiUriFromIndex(((user?.avatar || '').match(/emoji(\d+)/)?.[1] ? (parseInt((user?.avatar || '').match(/emoji(\d+)/)![1], 10) - 1) : 6))} width={40} height={40} style={styles.postAvatar} />
+                    {getEmojiXmlFromKey(user?.avatar) ? (
+                      <SvgXml xml={getEmojiXmlFromKey(user?.avatar) as string} width={40} height={40} style={styles.postAvatar} />
+                    ) : (
+                      <View style={[styles.postAvatar, { backgroundColor: '#EEE', alignItems: 'center', justifyContent: 'center' }]}>
+                        <Text style={{ fontWeight: '700', color: '#666' }}>?</Text>
+                      </View>
+                    )}
                     <View>
                       <Text style={styles.postAuthor}>You</Text>
                       <Text style={styles.postTime}>{formatDate(post.created_at)}</Text>
@@ -276,7 +260,13 @@ export default function Profile() {
             {societyUsers.filter(u => !existingFriendIds.has(u.id) && !addedFriends.has(u.id)).map((u) => (
               <View key={u.id} style={styles.friendCard}>
                 <View style={styles.friendInfo}>
-                  <SvgUri uri={EMOJI_SVG_URIS[parseAvatarIndex(u.avatar)]} width={50} height={50} style={styles.friendAvatar} />
+                  {getEmojiXmlFromKey(u.avatar) ? (
+                    <SvgXml xml={getEmojiXmlFromKey(u.avatar) as string} width={50} height={50} style={styles.friendAvatar} />
+                  ) : (
+                    <View style={[styles.friendAvatar, { backgroundColor: '#EEE', alignItems: 'center', justifyContent: 'center' }]}>
+                      <Text style={{ fontWeight: '700', color: '#666' }}>{(u.name || '?').charAt(0).toUpperCase()}</Text>
+                    </View>
+                  )}
                   <View>
                     <Text style={styles.friendName}>{u.name}</Text>
                   </View>
@@ -311,13 +301,13 @@ export default function Profile() {
           </View>
         </View>
 
-        {(() => {
-          const match = (user?.avatar || '').match(/emoji(\d+)/);
-          const oneBased = match ? parseInt(match[1], 10) : 7;
-          const zeroBased = ((oneBased - 1) % EMOJI_SVG_URIS.length + EMOJI_SVG_URIS.length) % EMOJI_SVG_URIS.length;
-          const uri = EMOJI_SVG_URIS[zeroBased];
-          return <SvgUri uri={uri} width={120} height={120} style={styles.profileImage} />;
-        })()}
+        {getEmojiXmlFromKey(user?.avatar) ? (
+          <SvgXml xml={getEmojiXmlFromKey(user?.avatar) as string} width={120} height={120} style={styles.profileImage} />
+        ) : (
+          <View style={[styles.profileImage, { backgroundColor: '#EEE', alignItems: 'center', justifyContent: 'center' }]}>
+            <Text style={{ fontWeight: '700', color: '#666' }}>{(user?.name || '?').charAt(0).toUpperCase()}</Text>
+          </View>
+        )}
         
         {/* User Info */}
         <View style={styles.userInfo}>

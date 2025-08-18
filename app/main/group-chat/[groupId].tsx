@@ -1,9 +1,9 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { FlatList, Image, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { SvgUri } from 'react-native-svg';
+import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../../contexts/UserContext";
-import { getEmojiUriFromKey } from "../../../lib/avatar";
+import { ensureEmojiXmlLoaded, getEmojiUriFromKey, getEmojiXmlFromKey } from "../../../lib/avatar";
 import { chatService, supabase } from "../../../lib/supabase";
 
 interface ChatMessageUI {
@@ -27,6 +27,7 @@ export default function GroupChatScreen() {
   const listRef = useRef<FlatList>(null);
 
   useEffect(() => {
+    ensureEmojiXmlLoaded();
     let channel: any;
     const load = async () => {
       setLoading(true);
@@ -94,14 +95,15 @@ export default function GroupChatScreen() {
     const profile = profiles[item.user_id];
     const avatarUri = profile?.avatar;
     const emojiUri = getEmojiUriFromKey(avatarUri);
+    const emojiXml = getEmojiXmlFromKey(avatarUri);
     const initials = (profile?.name || '?').charAt(0).toUpperCase();
     return (
       <View style={[styles.messageRow, isMe ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' }]}>
         {!isMe && (
           avatarUri && !emojiUri ? (
             <Image source={{ uri: avatarUri }} style={styles.avatar} />
-          ) : emojiUri ? (
-            <SvgUri uri={emojiUri} width={32} height={32} />
+          ) : emojiXml ? (
+            <SvgXml xml={emojiXml} width={32} height={32} />
           ) : (
             <View style={styles.defaultAvatar}><Text style={styles.defaultAvatarText}>{initials}</Text></View>
           )
@@ -110,10 +112,10 @@ export default function GroupChatScreen() {
           <Text style={styles.bubbleText}>{item.content}</Text>
         </View>
         {isMe && (
-          avatarUri && !emojiUri ? (
+          avatarUri && !emojiXml ? (
             <Image source={{ uri: avatarUri }} style={styles.avatar} />
-          ) : emojiUri ? (
-            <SvgUri uri={emojiUri} width={32} height={32} />
+          ) : emojiXml ? (
+            <SvgXml xml={emojiXml} width={32} height={32} />
           ) : (
             <View style={styles.defaultAvatar}><Text style={styles.defaultAvatarText}>{initials}</Text></View>
           )

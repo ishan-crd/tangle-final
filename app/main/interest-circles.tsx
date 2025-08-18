@@ -12,35 +12,14 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
-import { SvgUri } from 'react-native-svg';
+import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../contexts/UserContext";
 import { Group, groupsService, supabase } from "../../lib/supabase";
+import { ensureEmojiXmlLoaded, getEmojiXmlFromKey } from "../../lib/avatar";
 
-const EMOJI_URIS = [
-  require("../../assets/emojis/emoji1.svg"),
-  require("../../assets/emojis/emoji2.svg"),
-  require("../../assets/emojis/emoji3.svg"),
-  require("../../assets/emojis/emoji4.svg"),
-  require("../../assets/emojis/emoji5.svg"),
-  require("../../assets/emojis/emoji6.svg"),
-  require("../../assets/emojis/emoji7.svg"),
-  require("../../assets/emojis/emoji8.svg"),
-  require("../../assets/emojis/emoji9.svg"),
-  require("../../assets/emojis/emoji10.svg"),
-  require("../../assets/emojis/emoji11.svg"),
-  require("../../assets/emojis/emoji12.svg"),
-  require("../../assets/emojis/emoji13.svg"),
-  require("../../assets/emojis/emoji14.svg"),
-  require("../../assets/emojis/emoji15.svg"),
-  require("../../assets/emojis/emoji16.svg"),
-].map((mod) => require('react-native').Image.resolveAssetSource(mod).uri);
+useEffect(() => { ensureEmojiXmlLoaded(); }, []);
 
-const getAvatarUri = (avatar?: string) => {
-  const m = (avatar || '').match(/emoji(\d+)/);
-  const idx = m ? parseInt(m[1], 10) : 7;
-  const zero = ((idx - 1) % EMOJI_URIS.length + EMOJI_URIS.length) % EMOJI_URIS.length;
-  return EMOJI_URIS[zero];
-};
+const getAvatarXml = (avatar?: string) => getEmojiXmlFromKey(avatar || undefined);
 
 function GroupCard({ item, onPress, onJoin, onLeave }: { item: Group; onPress: () => void; onJoin: () => void; onLeave: () => void }) {
   const isMember = item.is_member;
@@ -71,7 +50,11 @@ function GroupCard({ item, onPress, onJoin, onLeave }: { item: Group; onPress: (
           <>
             {avatars.slice(0,5).map((uri, index) => (
               <View key={index} style={[styles.groupAvatar, { marginLeft: index > 0 ? -8 : 0 }]}> 
-                <SvgUri uri={uri} width={35} height={35} />
+                {getAvatarXml(uri) ? (
+                  <SvgXml xml={getAvatarXml(uri) as string} width={35} height={35} />
+                ) : (
+                  <View style={[styles.groupAvatar, { backgroundColor: '#EEE' }]} />
+                )}
               </View>
             ))}
             {item.member_count && item.member_count > 5 && (
