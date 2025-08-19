@@ -1,15 +1,17 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
+    DarkTheme,
+    DefaultTheme,
+    ThemeProvider,
 } from "@react-navigation/native";
 import * as Font from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { Platform } from "react-native";
 import "react-native-reanimated";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { UserProvider } from "../contexts/UserContext";
@@ -62,15 +64,22 @@ export default function RootLayout() {
   }
 
   return (
-    <UserProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="onboarding" />
-          <Stack.Screen name="main" />
-        </Stack>
-        <StatusBar style="dark" />
-      </ThemeProvider>
-    </UserProvider>
+    <SafeAreaProvider>
+      <UserProvider>
+        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+          <SafeAreaView
+            style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+            edges={Platform.OS === "android" ? ["top"] : ["top"]}
+          >
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="onboarding" />
+              <Stack.Screen name="main" />
+            </Stack>
+            <StatusBar style="dark" translucent={false} />
+          </SafeAreaView>
+        </ThemeProvider>
+      </UserProvider>
+    </SafeAreaProvider>
   );
 }

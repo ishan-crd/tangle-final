@@ -1,7 +1,14 @@
 import { Tabs } from "expo-router";
-import { Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function MainTabsLayout() {
+  const insets = useSafeAreaInsets();
+  const isIOS = Platform.OS === "ios";
+  const androidExtra = Math.max(insets.bottom, 0);
+  const iosExtra = insets.bottom; // allow larger gap on iOS (acceptable per request)
+  const androidInsetCapped = Math.min(androidExtra, 20);
+  const androidPadding = Math.max(10, androidExtra); // restore original Android-safe baseline
   return (
     <Tabs
       screenOptions={{
@@ -10,9 +17,9 @@ export default function MainTabsLayout() {
           backgroundColor: "#FFFFFF",
           borderTopWidth: 1,
           borderTopColor: "#E5E5E5",
-          paddingBottom: 10,
+          paddingBottom: isIOS ? Math.max(10, iosExtra) : androidPadding,
           paddingTop: 10,
-          height: 80,
+          height: isIOS ? 70 + iosExtra : 70 + (androidExtra > 0 ? androidExtra : 0),
         },
         tabBarActiveTintColor: "#3575EC",
         tabBarInactiveTintColor: "#666666",
