@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { FlatList, Image, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../../contexts/UserContext";
 import { ensureEmojiXmlLoaded, getEmojiUriFromKey, getEmojiXmlFromKey } from "../../../lib/avatar";
@@ -16,6 +17,7 @@ interface ChatMessageUI {
 export default function GroupChatScreen() {
   const { groupId, groupName, icon, color } = useLocalSearchParams<{ groupId: string; groupName?: string; icon?: string; color?: string }>();
   const { user } = useUser();
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessageUI[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export default function GroupChatScreen() {
   const [hasSubscribed, setHasSubscribed] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [inputBarHeight, setInputBarHeight] = useState(0);
-  const ANDROID_EXTRA_OFFSET = 36;
+  const ANDROID_EXTRA_OFFSET = 8;
   const listRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -125,7 +127,7 @@ export default function GroupChatScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Text style={styles.backText}>←</Text>
@@ -142,24 +144,15 @@ export default function GroupChatScreen() {
         renderItem={renderItem}
         ref={listRef as any}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-        contentContainerStyle={{ 
+        contentContainerStyle={{
           padding: 16,
-          paddingBottom: (
-            Platform.OS === 'android'
-              ? ((keyboardHeight > 0 ? keyboardHeight + ANDROID_EXTRA_OFFSET : 0) + inputBarHeight + 16)
-              : (inputBarHeight + 16)
-          )
+          paddingBottom: (inputBarHeight + insets.bottom + 16)
         }}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       />
 
       <View 
-        style={[
-          styles.inputBar, 
-          Platform.OS === 'android'
-            ? { position: 'absolute', left: 0, right: 0, bottom: (keyboardHeight > 0 ? keyboardHeight + ANDROID_EXTRA_OFFSET : 0), marginBottom: 0 }
-            : null
-        ]}
+        style={[styles.inputBar, { paddingBottom: 8 + insets.bottom }]}
         onLayout={(e) => setInputBarHeight(e.nativeEvent.layout.height)}
       >
         <TextInput
@@ -190,7 +183,7 @@ const styles = StyleSheet.create({
   bubbleMe: { alignSelf: 'flex-end', backgroundColor: '#CDE6DA' },
   bubbleOther: { alignSelf: 'flex-start', backgroundColor: '#F6D6C6' },
   bubbleText: { fontSize: 16 },
-  inputBar: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#EEE', padding: 12, gap: 8, marginBottom: 7 },
+  inputBar: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#EEE', paddingHorizontal: 12, paddingTop: 8, gap: 8 },
   textInput: { flex: 1, backgroundColor: '#F5F5F5', borderRadius: 24, paddingHorizontal: 16, height: 44 },
   sendButton: { backgroundColor: '#000', paddingHorizontal: 16, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   sendText: { color: '#FFF', fontWeight: '600' },

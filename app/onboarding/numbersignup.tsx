@@ -3,16 +3,16 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    Dimensions,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useUser } from "../../contexts/UserContext";
 import { userService } from "../../lib/supabase";
@@ -130,7 +130,14 @@ export default function NumberSignup() {
         let userProfile;
         
         if (existingUser) {
-          Alert.alert("Error", "An account with this phone number already exists. Please login instead.");
+          Alert.alert(
+            "Account exists",
+            "An account with this phone number already exists. Would you like to log in instead?",
+            [
+              { text: "Cancel", style: "cancel" },
+              { text: "Go to Login", onPress: () => router.replace({ pathname: "/onboarding/numbersignup", params: { mode: "login" } }) }
+            ]
+          );
           return;
         } else {
           // Create a new user with the phone number
@@ -177,8 +184,14 @@ export default function NumberSignup() {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
       {/* Main content */}
       <View style={styles.contentContainer}>
-        <Text style={styles.welcomeText}>Can we get your</Text>
-        <Text style={styles.welcomeText}>number, please?</Text>
+        {isLoginMode ? (
+          <Text style={styles.welcomeText}>Welcome Back!</Text>
+        ) : (
+          <>
+            <Text style={styles.welcomeText}>Can we get your</Text>
+            <Text style={styles.welcomeText}>number, please?</Text>
+          </>
+        )}
         <Text style={styles.descriptionText}>
           We only use phone numbers to make sure everyone on tangle is real.
         </Text>

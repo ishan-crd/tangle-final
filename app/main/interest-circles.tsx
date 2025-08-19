@@ -12,7 +12,6 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
-import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../contexts/UserContext";
 import { ensureEmojiXmlLoaded, getEmojiXmlFromKey } from "../../lib/avatar";
 import { Group, groupsService, supabase } from "../../lib/supabase";
@@ -45,38 +44,18 @@ function GroupCard({ item, onPress, onJoin, onLeave }: { item: Group; onPress: (
       style={styles.groupCard}
       onPress={onPress}
     >
-      <View style={styles.avatarCluster}>
-        {avatars.length > 0 ? (
-          <>
-            {avatars.slice(0,5).map((uri, index) => (
-              <View key={index} style={[styles.groupAvatar, { marginLeft: index > 0 ? -8 : 0 }]}> 
-                {getAvatarXml(uri) ? (
-                  <SvgXml xml={getAvatarXml(uri) as string} width={35} height={35} />
-                ) : (
-                  <View style={[styles.groupAvatar, { backgroundColor: '#EEE' }]} />
-                )}
-              </View>
-            ))}
-            {item.member_count && item.member_count > 5 && (
-              <View style={[styles.groupAvatar, styles.moreAvatar, { marginLeft: -8 }]}> 
-                <Text style={styles.moreAvatarText}>+{(item.member_count - 5)}</Text>
-              </View>
-            )}
-          </>
-        ) : (
-          <View style={styles.groupAvatar}><Text style={styles.avatarText}>?</Text></View>
-        )}
-      </View>
+      {/* Removed member avatar cluster to reduce top gap */}
 
-      <Text style={styles.groupName}>{item.name}</Text>
-      {(item as any).color || (item as any).icon ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-          <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: (item as any).color || '#EEE', alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>
-            <Text style={{ fontSize: 12 }}>{(item as any).icon || '📱'}</Text>
-          </View>
-          <Text style={{ fontSize: 12, color: '#666' }}>{item.is_private ? 'Private' : 'Public'}</Text>
+      <View style={{ alignItems: 'center', marginBottom: 6 }}>
+        <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: (item as any).color || '#EEE', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+          <Text style={{ fontSize: 26 }}>{(item as any).icon || '📱'}</Text>
         </View>
-      ) : null}
+        <Text style={styles.groupName}>{item.name}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+          <Text style={{ fontSize: 12 }}>{item.is_private ? '🔒' : '🌐'}</Text>
+          <Text style={{ fontSize: 12, color: '#666', marginLeft: 6 }}>{item.is_private ? 'Private' : 'Public'}</Text>
+        </View>
+      </View>
       <Text style={styles.memberCount}>
         {item.member_count || 0} member{item.member_count !== 1 ? 's' : ''}
       </Text>
@@ -385,7 +364,8 @@ const styles = StyleSheet.create({
     width: "48%",
     backgroundColor: "#F8F9FA",
     borderRadius: 16,
-    padding: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {

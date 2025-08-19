@@ -11,6 +11,8 @@ export default function FindPeopleScreen() {
   const [members, setMembers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [sending, setSending] = useState<Set<string>>(new Set());
+  const [requested, setRequested] = useState<Set<string>>(new Set());
 
   useEffect(() => { ensureEmojiXmlLoaded(); }, []);
 
@@ -51,6 +53,22 @@ export default function FindPeopleScreen() {
   }, [members, user?.interests]);
 
   const handleBack = () => router.back();
+
+  const addFriend = async (friendId: string) => {
+    if (!user?.id) return;
+    try {
+      setSending(prev => new Set(prev).add(friendId));
+      const { error } = await supabase
+        .from('friendships')
+        .upsert({ user_id: user.id, friend_id: friendId, status: 'accepted' }, { onConflict: 'user_id,friend_id' });
+      if (error) throw error;
+      setRequested(prev => { const n = new Set(prev); n.add(friendId); return n; });
+    } catch (e) {
+      console.error('Error adding friend:', e);
+    } finally {
+      setSending(prev => { const n = new Set(prev); n.delete(friendId); return n; });
+    }
+  };
 
   const renderAvatar = (avatar?: string, name?: string) => {
     if (isLikelyRemoteUri(avatar)) return <Image source={{ uri: avatar as string }} style={styles.avatar} />;
@@ -102,8 +120,14 @@ export default function FindPeopleScreen() {
                     {(p as any).society && <Text style={styles.personSociety}>{(p as any).society}</Text>}
                   </View>
                 </View>
-                <TouchableOpacity style={styles.actionBtn}>
-                  <Text style={styles.actionBtnText}>View</Text>
+                <TouchableOpacity
+                  style={styles.iconWrapper}
+                  onPress={() => addFriend((p as any).id)}
+                  disabled={sending.has((p as any).id) || requested.has((p as any).id)}
+                >
+                  <Text style={{ color: '#fff', fontSize: 16 }}>
+                    {sending.has((p as any).id) ? '…' : requested.has((p as any).id) ? '✓' : '+'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -120,8 +144,14 @@ export default function FindPeopleScreen() {
                     )}
                   </View>
                 </View>
-                <TouchableOpacity style={styles.actionBtn}>
-                  <Text style={styles.actionBtnText}>View</Text>
+                <TouchableOpacity
+                  style={styles.iconWrapper}
+                  onPress={() => addFriend((p as any).id)}
+                  disabled={sending.has((p as any).id) || requested.has((p as any).id)}
+                >
+                  <Text style={{ color: '#fff', fontSize: 16 }}>
+                    {sending.has((p as any).id) ? '…' : requested.has((p as any).id) ? '✓' : '+'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -157,6 +187,7 @@ const styles = StyleSheet.create({
   personInterests: { fontSize: 12, color: '#666', marginTop: 2 },
   actionBtn: { backgroundColor: '#3575EC', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 14 },
   actionBtnText: { color: '#FFF', fontWeight: '700' },
+  iconWrapper: { backgroundColor: '#000', borderRadius: 12, padding: 8, minWidth: 36, alignItems: 'center' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
   loadingText: { marginTop: 8, color: '#666' },
 });

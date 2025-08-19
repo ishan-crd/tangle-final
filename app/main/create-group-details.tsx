@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
     Keyboard,
     Platform,
+    ScrollView,
     StyleSheet,
     Text,
     TextInput,
@@ -63,7 +64,12 @@ export default function CreateGroupDetailsScreen() {
       </View>
 
       {/* Form */}
-      <View style={styles.form}>
+      <ScrollView
+        style={styles.form}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Your awesome group name</Text>
           <TextInput
@@ -136,7 +142,7 @@ export default function CreateGroupDetailsScreen() {
             <View style={[styles.radioButton, isPrivate && styles.radioButtonSelected]} />
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Next Button */}
       <View style={styles.buttonContainer}>
@@ -220,7 +226,6 @@ const styles = StyleSheet.create({
   // Form
   form: {
     flex: 1,
-    paddingHorizontal: 20,
   },
   inputGroup: {
     marginBottom: 24,

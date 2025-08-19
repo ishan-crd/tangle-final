@@ -3,17 +3,17 @@ import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import {
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../contexts/UserContext";
-import { supabase } from "../../lib/supabase";
 import { ensureEmojiXmlLoaded, getEmojiXmlFromKey } from "../../lib/avatar";
+import { supabase } from "../../lib/supabase";
 
 SplashScreen.preventAutoHideAsync();
 const { width } = Dimensions.get("window");
@@ -27,6 +27,7 @@ export default function FindYourBuddy() {
   const { user } = useUser();
   const [buddies, setBuddies] = useState<Buddy[]>([]);
   const [sending, setSending] = useState<Set<string>>(new Set());
+  const [requested, setRequested] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function loadFonts() {
@@ -75,6 +76,7 @@ export default function FindYourBuddy() {
       setSending(prev => new Set(prev).add(friendId));
       const { error } = await supabase.from('friendships').insert([{ user_id: user.id, friend_id: friendId, status: 'pending' }]);
       if (error) throw error;
+      setRequested(prev => { const n = new Set(prev); n.add(friendId); return n; });
     } catch (e) {
       console.error('Error sending request:', e);
     } finally {
@@ -109,8 +111,14 @@ export default function FindYourBuddy() {
               )}
               <Text style={styles.name}>{b.name}</Text>
             </View>
-            <TouchableOpacity style={styles.iconWrapper} onPress={() => sendFriendRequest(b.id)} disabled={sending.has(b.id)}>
-              <Text style={{ color: '#fff', fontSize: 16 }}>{sending.has(b.id) ? '…' : '+'}</Text>
+            <TouchableOpacity
+              style={styles.iconWrapper}
+              onPress={() => sendFriendRequest(b.id)}
+              disabled={sending.has(b.id) || requested.has(b.id)}
+            >
+              <Text style={{ color: '#fff', fontSize: 16 }}>
+                {sending.has(b.id) ? '…' : requested.has(b.id) ? '✓' : '+'}
+              </Text>
             </TouchableOpacity>
           </View>
         ))}
@@ -133,7 +141,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 30,
   },
   title: {

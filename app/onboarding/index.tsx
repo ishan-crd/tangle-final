@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     position: "absolute",
-    top: 92,
+    top: 60,
     left: 18,
     right: 18,
     alignItems: "flex-start",
