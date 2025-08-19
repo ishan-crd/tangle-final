@@ -137,8 +137,8 @@ export default function CreateGroupStyleScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFFFFF" },
-  header: { paddingHorizontal: 20, paddingTop: Platform.OS === "android" ? 20 : 60, paddingBottom: 20, alignItems: "center" },
-  backButton: { position: "absolute", top: Platform.OS === "android" ? 20 : 60, left: 20, padding: 8 },
+  header: { paddingHorizontal: 20, paddingTop: Platform.OS === "android" ? 20 : 20, paddingBottom: 20, alignItems: "center" },
+  backButton: { position: "absolute", top: Platform.OS === "android" ? 20 : 20, left: 20, padding: 8 },
   backButtonText: { fontSize: 24, color: "#000000", fontWeight: "bold" },
   progressContainer: { marginTop: 20, marginBottom: 20 },
   progressBar: { flexDirection: "row", alignItems: "center", gap: 8 },

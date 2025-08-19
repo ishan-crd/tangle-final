@@ -238,13 +238,13 @@ const styles = StyleSheet.create({
   // Header
   header: {
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === "android" ? 20 : 60,
+    paddingTop: Platform.OS === "android" ? 20 : 20,
     paddingBottom: 20,
     alignItems: "center",
   },
   backButton: {
     position: "absolute",
-    top: Platform.OS === "android" ? 20 : 60,
+    top: Platform.OS === "android" ? 20 : 20,
     left: 20,
     padding: 8,
   },

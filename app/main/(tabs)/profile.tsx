@@ -370,14 +370,14 @@ const styles = StyleSheet.create({
   },
   profileHeader: {
     backgroundColor: "#E8F5E8",
-    paddingTop: Platform.OS === "android" ? 20 : 60,
+    paddingTop: Platform.OS === "android" ? 20 : 20,
     paddingBottom: 30,
     alignItems: "center",
     position: "relative",
   },
   headerActions: {
     position: "absolute",
-    top: Platform.OS === "android" ? 20 : 60,
+    top: Platform.OS === "android" ? 20 : 20,
     left: 0,
     right: 0,
     flexDirection: "row",

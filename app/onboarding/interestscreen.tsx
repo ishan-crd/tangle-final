@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    paddingTop: Platform.OS === "android" ? 40 : 90,
+    paddingTop: Platform.OS === "android" ? 40 : 20,
     paddingBottom: 24,
     paddingHorizontal: 24,
     justifyContent: "space-between",

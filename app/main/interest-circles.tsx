@@ -14,8 +14,8 @@ import {
 } from "react-native";
 import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../contexts/UserContext";
-import { Group, groupsService, supabase } from "../../lib/supabase";
 import { ensureEmojiXmlLoaded, getEmojiXmlFromKey } from "../../lib/avatar";
+import { Group, groupsService, supabase } from "../../lib/supabase";
 
 useEffect(() => { ensureEmojiXmlLoaded(); }, []);
 
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === "android" ? 20 : 60,
+    paddingTop: Platform.OS === "android" ? 20 : 20,
     paddingBottom: 20,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,

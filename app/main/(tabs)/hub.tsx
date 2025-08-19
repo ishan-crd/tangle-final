@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8F9FA",
-    paddingTop: Platform.OS === "android" ? 0 : 50, // Remove gap on Android
+    paddingTop: Platform.OS === "android" ? 0 : 0,
   },
   
   // Search Section

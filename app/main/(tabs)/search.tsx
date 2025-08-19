@@ -1,13 +1,13 @@
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    Platform,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { useUser } from "../../../contexts/UserContext";
 import { Match, matchService } from "../../../lib/supabase";
@@ -105,28 +105,28 @@ export default function SearchScreen() {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         
         <View style={styles.actionGrid}>
-          <TouchableOpacity style={styles.actionCard}>
+          <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/main/find-people" as any) }>
             <Text style={styles.actionIcon}>👥</Text>
             <Text style={styles.actionTitle}>Find People</Text>
             <Text style={styles.actionSubtitle}>Search by name or society</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionCard}>
+          <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/main/find-matches" as any) }>
             <Text style={styles.actionIcon}>🏀</Text>
             <Text style={styles.actionTitle}>Find Matches</Text>
             <Text style={styles.actionSubtitle}>Join available matches</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionCard}>
+          <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/main/tournaments" as any) }>
             <Text style={styles.actionIcon}>🏆</Text>
             <Text style={styles.actionTitle}>Find Tournaments</Text>
             <Text style={styles.actionSubtitle}>Join tournaments</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionCard}>
+          <TouchableOpacity style={[styles.actionCard, styles.lockedCard]} disabled onPress={() => {}}>
             <Text style={styles.actionIcon}>📍</Text>
-            <Text style={styles.actionTitle}>Nearby</Text>
-            <Text style={styles.actionSubtitle}>Find activities nearby</Text>
+            <Text style={styles.actionTitle}>Nearby (Locked)</Text>
+            <Text style={styles.actionSubtitle}>Coming soon</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-    paddingTop: Platform.OS === "android" ? 0 : 50, // Remove gap on Android
+    paddingTop: 0,
   },
   header: {
     padding: 20,
@@ -243,6 +243,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  lockedCard: {
+    opacity: 0.5,
   },
   actionIcon: {
     fontSize: 32,
