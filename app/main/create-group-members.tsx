@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
     Image,
     Platform,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -163,22 +164,71 @@ export default function CreateGroupMembersScreen() {
         </Text>
       </View>
 
-      {/* Connections Section */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Connections</Text>
-          <TouchableOpacity style={styles.dropdownButton}>
-            <Text style={styles.dropdownIcon}>⌄</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading connections...</Text>
+      <ScrollView 
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Connections Section */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Connections</Text>
+            <TouchableOpacity style={styles.dropdownButton}>
+              <Text style={styles.dropdownIcon}>⌄</Text>
+            </TouchableOpacity>
           </View>
-        ) : (
+          
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading connections...</Text>
+            </View>
+          ) : (
+            <View style={styles.membersList}>
+              {filteredMembers.slice(0, 3).map((member) => {
+                const isSelected = selectedMembers.has(member.id);
+                return (
+                  <View key={member.id} style={styles.memberCard}>
+                    <View style={styles.memberInfo}>
+                      <View style={styles.avatarContainer}>
+                        {isLikelyRemoteUri(member.avatar_url) ? (
+                          <Image source={{ uri: member.avatar_url as string }} style={styles.avatar} />
+                        ) : getEmojiXmlFromKey(member.avatar_url) ? (
+                          <SvgXml xml={getEmojiXmlFromKey(member.avatar_url) as string} width={48} height={48} />
+                        ) : (
+                          <View style={styles.defaultAvatar}>
+                            <Text style={styles.defaultAvatarText}>
+                              {member.full_name.charAt(0).toUpperCase()}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.memberName}>{member.full_name}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.addButton, isSelected && styles.addButtonSelected]}
+                      onPress={() => toggleMemberSelection(member.id)}
+                    >
+                      <Text style={styles.addButtonIcon}>{isSelected ? '✓' : '+'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
+
+        {/* Recommendation Section */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recommendation</Text>
+            <Text style={styles.recommendationSubtitle}>(users who are into sports)</Text>
+            <TouchableOpacity style={styles.dropdownButton}>
+              <Text style={styles.dropdownIcon}>⌄</Text>
+            </TouchableOpacity>
+          </View>
+          
           <View style={styles.membersList}>
-            {filteredMembers.slice(0, 3).map((member) => {
+            {filteredMembers.slice(3, 5).map((member) => {
               const isSelected = selectedMembers.has(member.id);
               return (
                 <View key={member.id} style={styles.memberCard}>
@@ -208,63 +258,20 @@ export default function CreateGroupMembersScreen() {
               );
             })}
           </View>
-        )}
-      </View>
+        </View>
 
-      {/* Recommendation Section */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recommendation</Text>
-          <Text style={styles.recommendationSubtitle}>(users who are into sports)</Text>
-          <TouchableOpacity style={styles.dropdownButton}>
-            <Text style={styles.dropdownIcon}>⌄</Text>
+        {/* Next Button */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.nextButton}
+            onPress={handleNext}
+          >
+            <Text style={styles.nextButtonText}>
+              Next: Group Style
+            </Text>
           </TouchableOpacity>
         </View>
-        
-        <View style={styles.membersList}>
-          {filteredMembers.slice(3, 5).map((member) => {
-            const isSelected = selectedMembers.has(member.id);
-            return (
-              <View key={member.id} style={styles.memberCard}>
-                <View style={styles.memberInfo}>
-                  <View style={styles.avatarContainer}>
-                    {isLikelyRemoteUri(member.avatar_url) ? (
-                      <Image source={{ uri: member.avatar_url as string }} style={styles.avatar} />
-                    ) : getEmojiXmlFromKey(member.avatar_url) ? (
-                      <SvgXml xml={getEmojiXmlFromKey(member.avatar_url) as string} width={48} height={48} />
-                    ) : (
-                      <View style={styles.defaultAvatar}>
-                        <Text style={styles.defaultAvatarText}>
-                          {member.full_name.charAt(0).toUpperCase()}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={styles.memberName}>{member.full_name}</Text>
-                </View>
-                <TouchableOpacity
-                  style={[styles.addButton, isSelected && styles.addButtonSelected]}
-                  onPress={() => toggleMemberSelection(member.id)}
-                >
-                  <Text style={styles.addButtonIcon}>{isSelected ? '✓' : '+'}</Text>
-                </TouchableOpacity>
-              </View>
-            );
-          })}
-        </View>
-      </View>
-
-      {/* Next Button */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.nextButton}
-          onPress={handleNext}
-        >
-          <Text style={styles.nextButtonText}>
-            Next: Group Style
-          </Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -274,17 +281,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
   
   // Header
   header: {
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === "android" ? 20 : 60,
+    paddingTop: Platform.OS === "android" ? 10 : 50,
     paddingBottom: 20,
     alignItems: "center",
   },
   backButton: {
     position: "absolute",
-    top: Platform.OS === "android" ? 20 : 60,
+    top: Platform.OS === "android" ? 10 : 50,
     left: 20,
     padding: 8,
   },
@@ -463,7 +476,9 @@ const styles = StyleSheet.create({
   // Button
   buttonContainer: {
     paddingHorizontal: 20,
+    paddingTop: 20,
     paddingBottom: 40,
+    backgroundColor: "#FFFFFF",
   },
   nextButton: {
     backgroundColor: "#FFFFFF",

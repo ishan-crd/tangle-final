@@ -4,7 +4,7 @@ import { FlatList, Image, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../../contexts/UserContext";
-import { ensureEmojiXmlLoaded, getEmojiUriFromKey, getEmojiXmlFromKey } from "../../../lib/avatar";
+import { ensureEmojiXmlLoaded, getEmojiXmlFromKey } from "../../../lib/avatar";
 import { chatService, supabase } from "../../../lib/supabase";
 
 interface ChatMessageUI {
@@ -37,18 +37,36 @@ export default function GroupChatScreen() {
       setMessages(recent.map(m => ({ id: m.id, user_id: m.sender_id, content: m.content || '', created_at: m.created_at })));
       const senderIds = Array.from(new Set(recent.map(m => m.sender_id)));
       if (senderIds.length > 0) {
-        const { data: profs } = await supabase.from('user_profiles').select('id, name, avatar').in('id', senderIds);
-        const map: Record<string, { name: string; avatar?: string }> = {};
-        (profs || []).forEach(p => { map[p.id] = { name: p.name, avatar: p.avatar }; });
-        setProfiles(map);
+        const { data: profs, error: profError } = await supabase.from('user_profiles').select('id, name, avatar').in('id', senderIds);
+        if (profError) {
+          console.error('Error loading profiles:', profError);
+        } else {
+          const map: Record<string, { name: string; avatar?: string }> = {};
+          (profs || []).forEach(p => { 
+            map[p.id] = { name: p.name, avatar: p.avatar }; 
+            console.log('Loaded profile:', p.name, p.avatar);
+          });
+          setProfiles(map);
+        }
       }
       channel = chatService.subscribeToGroupMessages(groupId as string, async (m) => {
         setMessages(prev => [...prev, { id: m.id, user_id: m.sender_id, content: m.content || '', created_at: m.created_at }]);
         if (!profiles[m.sender_id]) {
-          const { data } = await supabase.from('user_profiles').select('id, name, avatar').eq('id', m.sender_id).single();
-          if (data) setProfiles(prev => ({ ...prev, [data.id]: { name: data.name, avatar: data.avatar } }));
+          const { data, error } = await supabase.from('user_profiles').select('id, name, avatar').eq('id', m.sender_id).single();
+          if (data) {
+            console.log('Loaded new profile:', data.name, data.avatar);
+            setProfiles(prev => ({ ...prev, [data.id]: { name: data.name, avatar: data.avatar } }));
+          } else if (error) {
+            console.error('Error loading new profile:', error);
+          }
         }
       });
+      // Ensure current user profile is loaded
+      if (user?.id && !profiles[user.id]) {
+        console.log('Loading current user profile:', user.name, user.avatar);
+        setProfiles(prev => ({ ...prev, [user.id!]: { name: user?.name || 'Me', avatar: user?.avatar } }));
+      }
+      
       setHasSubscribed(true);
       setLoading(false);
     };
@@ -78,6 +96,7 @@ export default function GroupChatScreen() {
     if (!hasSubscribed) {
       setMessages(prev => [...prev, { id: `temp-${Date.now()}`, user_id: user?.id as string, content: text, created_at: new Date().toISOString() }]);
       if (user?.id && !profiles[user.id]) {
+        console.log('Setting current user profile:', user.name, user.avatar);
         setProfiles(prev => ({ ...prev, [user.id!]: { name: user?.name || 'Me', avatar: user?.avatar } }));
       }
     }
@@ -96,31 +115,40 @@ export default function GroupChatScreen() {
     const isMe = item.user_id === user?.id;
     const profile = profiles[item.user_id];
     const avatarUri = profile?.avatar;
-    const emojiUri = getEmojiUriFromKey(avatarUri);
     const emojiXml = getEmojiXmlFromKey(avatarUri);
     const initials = (profile?.name || '?').charAt(0).toUpperCase();
+    
+    const renderAvatar = () => {
+      // Debug logging
+      console.log('Avatar debug:', { avatarUri, emojiXml, initials });
+      
+      if (emojiXml) {
+        return <SvgXml xml={emojiXml} width={32} height={32} />;
+      } else if (avatarUri && (avatarUri.startsWith('http') || avatarUri.startsWith('https'))) {
+        return <Image source={{ uri: avatarUri }} style={styles.avatar} />;
+      } else {
+        return (
+          <View style={styles.defaultAvatar}>
+            <Text style={styles.defaultAvatarText}>{initials}</Text>
+          </View>
+        );
+      }
+    };
+    
     return (
       <View style={[styles.messageRow, isMe ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' }]}>
         {!isMe && (
-          avatarUri && !emojiUri ? (
-            <Image source={{ uri: avatarUri }} style={styles.avatar} />
-          ) : emojiXml ? (
-            <SvgXml xml={emojiXml} width={32} height={32} />
-          ) : (
-            <View style={styles.defaultAvatar}><Text style={styles.defaultAvatarText}>{initials}</Text></View>
-          )
+          <View style={styles.avatarContainer}>
+            {renderAvatar()}
+          </View>
         )}
         <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleOther]}>
           <Text style={styles.bubbleText}>{item.content}</Text>
         </View>
         {isMe && (
-          avatarUri && !emojiXml ? (
-            <Image source={{ uri: avatarUri }} style={styles.avatar} />
-          ) : emojiXml ? (
-            <SvgXml xml={emojiXml} width={32} height={32} />
-          ) : (
-            <View style={styles.defaultAvatar}><Text style={styles.defaultAvatarText}>{initials}</Text></View>
-          )
+          <View style={styles.avatarContainer}>
+            {renderAvatar()}
+          </View>
         )}
       </View>
     );
@@ -129,13 +157,15 @@ export default function GroupChatScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.push('/main/interest-circles')}>
           <Text style={styles.backText}>←</Text>
         </TouchableOpacity>
-        <View style={[styles.groupBadge, { backgroundColor: (color as string) || '#EEE' }]}>
-          <Text style={styles.groupIcon}>{(icon as string) || '💬'}</Text>
+        <View style={styles.headerContent}>
+          <View style={[styles.groupBadge, { backgroundColor: (color as string) || '#EEE' }]}>
+            <Text style={styles.groupIcon}>{(icon as string) || '💬'}</Text>
+          </View>
+          <Text style={styles.title}>{groupName || 'Group Chat'}</Text>
         </View>
-        <Text style={styles.title}>{groupName || 'Group Chat'}</Text>
       </View>
 
       <FlatList
@@ -173,11 +203,20 @@ export default function GroupChatScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { paddingTop: Platform.OS === 'android' ? 20 : 60, paddingBottom: 12, paddingHorizontal: 16, alignItems: 'center' },
-  backButton: { position: 'absolute', left: 16, top: Platform.OS === 'android' ? 20 : 60, padding: 8 },
+  header: { 
+    paddingTop: Platform.OS === 'android' ? 10 : 50, 
+    paddingBottom: 12, 
+    paddingHorizontal: 16, 
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    position: 'relative'
+  },
+  backButton: { position: 'absolute', left: 16, top: Platform.OS === 'android' ? 10 : 50, padding: 8 },
   backText: { fontSize: 22, fontWeight: 'bold' },
-  groupBadge: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  groupIcon: { fontSize: 28 },
+  headerContent: { alignItems: 'center' },
+  groupBadge: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  groupIcon: { fontSize: 20 },
   title: { fontSize: 18, fontWeight: '700' },
   bubble: { maxWidth: '80%', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 22 },
   bubbleMe: { alignSelf: 'flex-end', backgroundColor: '#CDE6DA' },
@@ -188,9 +227,18 @@ const styles = StyleSheet.create({
   sendButton: { backgroundColor: '#000', paddingHorizontal: 16, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   sendText: { color: '#FFF', fontWeight: '600' },
   messageRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  avatarContainer: { 
+    width: 32, 
+    height: 32, 
+    borderRadius: 16, 
+    overflow: 'hidden',
+    backgroundColor: '#EEE',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
   avatar: { width: 32, height: 32, borderRadius: 16 },
   defaultAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#EEE', alignItems: 'center', justifyContent: 'center' },
-  defaultAvatarText: { fontWeight: '700', color: '#666' }
+  defaultAvatarText: { fontWeight: '700', color: '#666', fontSize: 14 }
 });
 
 

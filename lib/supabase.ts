@@ -169,6 +169,7 @@ export interface Post {
   title?: string;
   content: string;
   media_url?: string;
+  image_url?: string;
   post_type: 'general' | 'match' | 'tournament' | 'announcement';
   is_announcement: boolean;
   is_pinned: boolean;
@@ -1119,6 +1120,17 @@ export const groupsService = {
 
   async getAllGroupsInSocietyByName(societyName: string, userId: string): Promise<Group[]> {
     try {
+      // Check if groups table exists first
+      const { data: tableCheck, error: tableError } = await supabase
+        .from('groups')
+        .select('id')
+        .limit(1);
+      
+      if (tableError) {
+        console.error('Groups table not accessible:', tableError);
+        return [];
+      }
+
       const society = await societyService.getSocietyByName(societyName);
       if (society) {
         return await this.getAllGroupsInSociety(society.id, userId);
@@ -1139,7 +1151,7 @@ export const groupsService = {
     
     if (error) throw error;
     
-    // Add creator as admin member
+    // Add creator as admin member (this ensures group always has at least 1 member)
     await this.addMemberToGroup(data.id, groupData.created_by, 'admin');
     
     return data;
@@ -1164,6 +1176,9 @@ export const groupsService = {
       .eq('user_id', userId);
     
     if (error) throw error;
+    
+    // Check if group has any members left, if not, delete the group
+    await this.checkAndDeleteEmptyGroup(groupId);
   },
 
   async getGroupMembers(groupId: string): Promise<GroupMember[]> {
@@ -1233,5 +1248,59 @@ export const groupsService = {
       .eq('id', groupId);
     
     if (error) throw error;
+  },
+
+  async checkAndDeleteEmptyGroup(groupId: string): Promise<void> {
+    try {
+      // Check if group has any members
+      const { count, error: countError } = await supabase
+        .from('group_members')
+        .select('*', { count: 'exact', head: true })
+        .eq('group_id', groupId);
+      
+      if (countError) {
+        console.error('Error checking group member count:', countError);
+        return;
+      }
+      
+      // If no members left, delete the group
+      if (count === 0) {
+        console.log(`Group ${groupId} has no members, deleting...`);
+        
+        // Delete group messages first (due to foreign key constraints)
+        const { error: messagesError } = await supabase
+          .from('group_messages')
+          .delete()
+          .eq('group_id', groupId);
+        
+        if (messagesError) {
+          console.error('Error deleting group messages:', messagesError);
+        }
+        
+        // Delete group invitations
+        const { error: invitationsError } = await supabase
+          .from('group_invitations')
+          .delete()
+          .eq('group_id', groupId);
+        
+        if (invitationsError) {
+          console.error('Error deleting group invitations:', invitationsError);
+        }
+        
+        // Finally delete the group itself
+        const { error: groupError } = await supabase
+          .from('groups')
+          .delete()
+          .eq('id', groupId);
+        
+        if (groupError) {
+          console.error('Error deleting empty group:', groupError);
+        } else {
+          console.log(`Group ${groupId} successfully deleted`);
+        }
+      }
+    } catch (error) {
+      console.error('Error in checkAndDeleteEmptyGroup:', error);
+    }
   }
 }; 

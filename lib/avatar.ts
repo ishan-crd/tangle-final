@@ -1,6 +1,5 @@
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
-import { Image } from 'react-native';
 
 // Preload and cache SVG XML strings for bundled emoji assets so they render
 // reliably in Android release builds where packager URIs are not accessible.
@@ -94,7 +93,7 @@ const EMOJI_URIS: string[] = [
   require("../assets/emojis/emoji14.svg"),
   require("../assets/emojis/emoji15.svg"),
   require("../assets/emojis/emoji16.svg"),
-].map((mod) => Image.resolveAssetSource(mod).uri);
+].map((mod) => Asset.fromModule(mod).uri);
 
 export function getEmojiUriFromKey(avatar?: string): string | null {
   if (!avatar) return null;

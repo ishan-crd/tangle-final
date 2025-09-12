@@ -1,3 +1,5 @@
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useState } from "react";
 import {
     Alert,
@@ -23,6 +25,7 @@ export default function AddScreen() {
   const [selectedOption, setSelectedOption] = useState("");
   const [postContent, setPostContent] = useState("");
   const [postTitle, setPostTitle] = useState("");
+  const [postImage, setPostImage] = useState<string | null>(null);
   const [isPosting, setIsPosting] = useState(false);
   
   
@@ -44,6 +47,30 @@ export default function AddScreen() {
     return user?.society_id || null;
   };
 
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission Required", "Permission to access camera roll is required!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setPostImage(result.assets[0].uri);
+    }
+  };
+
+  const removeImage = () => {
+    setPostImage(null);
+  };
+
   const handleCreatePost = async () => {
     if (!postContent.trim()) {
       Alert.alert("Error", "Please write something to post");
@@ -62,12 +89,23 @@ export default function AddScreen() {
         Alert.alert("Error", "Please complete your profile to create posts");
         return;
       }
+
+      // For now, store the local URI directly (temporary solution)
+      // TODO: Implement proper image hosting
+      let imageUrl = postImage || undefined;
+      
+      if (postImage) {
+        console.log('Using local image URI:', postImage);
+        // Note: This is a temporary solution. In production, images should be uploaded to a cloud service
+        // For now, we'll store the local URI but it won't work across devices
+      }
       
       await postService.createPost({
         user_id: user.id,
         society_id: societyId,
         title: postTitle.trim() || undefined,
         content: postContent.trim(),
+        image_url: imageUrl,
         post_type: "general",
         is_announcement: false,
         is_pinned: false,
@@ -78,6 +116,7 @@ export default function AddScreen() {
       Alert.alert("Success", "Post created successfully!");
       setPostContent("");
       setPostTitle("");
+      setPostImage(null);
       setShowModal(false);
     } catch (error) {
       console.error('Error creating post:', error);
@@ -201,7 +240,27 @@ export default function AddScreen() {
                 />
               </View>
 
-              {/* Image upload removed */}
+              {/* Image Upload Section */}
+              <View style={styles.inputSection}>
+                <Text style={styles.inputLabel}>Add Photo (Optional)</Text>
+                {postImage ? (
+                  <View style={styles.imagePreviewContainer}>
+                    <Image 
+                      source={{ uri: postImage }} 
+                      style={styles.imagePreview} 
+                      contentFit="cover"
+                      transition={200}
+                    />
+                    <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
+                      <Text style={styles.removeImageText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity style={styles.imageUploadButton} onPress={pickImage}>
+                    <Text style={styles.imageUploadText}>📷 Add Photo</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
 
               <View style={styles.characterCount}>
                 <Text style={styles.characterCountText}>
@@ -587,15 +646,46 @@ const styles = StyleSheet.create({
     minHeight: 120,
     textAlignVertical: "top",
   },
-  addImageButton: {
+  imageUploadButton: {
     backgroundColor: '#F0F0F0',
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center'
+    paddingVertical: 15,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderStyle: 'dashed',
   },
-  addImageText: {
-    color: '#333',
-    fontWeight: '600'
+  imageUploadText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  imagePreviewContainer: {
+    position: 'relative',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeImageText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   textArea: {
     minHeight: 100,

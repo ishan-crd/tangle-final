@@ -8,6 +8,7 @@
     "scheme": "tangle",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "sdkVersion": "54.0.0",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tangle.app",
@@ -54,6 +55,10 @@
       "eas": {
         "projectId": "c785d31b-74d6-439f-94d9-46d7d718475d"
       }
+    },
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/c785d31b-74d6-439f-94d9-46d7d718475d"
     }
   }
 }

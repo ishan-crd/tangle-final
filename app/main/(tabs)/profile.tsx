@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { Image } from 'expo-image';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -17,8 +18,6 @@ import { Post } from "../../../lib/supabase";
 
 const supabase = createClient('https://lrqrxyqrmwrbsxgiyuio.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycXJ4eXFybXdyYnN4Z2l5dWlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDI5MDgsImV4cCI6MjA2OTc3ODkwOH0.2wjV1fNp2oRxzlbHd5pZNVfOzHrNI5Q-s6-Rc3Qdoq4');
 
-useEffect(() => { ensureEmojiXmlLoaded(); }, []);
-
 const bestFriends = [
   { name: "Navya Talwar", distance: "<1 km", emojiIndex: 0 },
   { name: "Yash Bhati", distance: "2 km", emojiIndex: 1 },
@@ -30,6 +29,8 @@ export default function Profile() {
   const router = useRouter();
   const { user, logout } = useUser();
   const [activeTab, setActiveTab] = useState("Connections");
+  
+  useEffect(() => { ensureEmojiXmlLoaded(); }, []);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [societyUsers, setSocietyUsers] = useState<Array<{ id: string; name: string; avatar?: string }>>([]);
@@ -229,6 +230,16 @@ export default function Profile() {
                     </View>
                   </View>
                   <Text style={styles.postText}>{post.content}</Text>
+                  {post.image_url && (
+                    <View style={styles.postImageContainer}>
+                      <Image 
+                        source={{ uri: post.image_url }} 
+                        style={styles.postImage}
+                        contentFit="cover"
+                        transition={200}
+                      />
+                    </View>
+                  )}
                   <View style={styles.postStats}>
                     <Text style={styles.postStat}>❤️ {post.likes_count}</Text>
                     <Text style={styles.postStat}>💬 {post.comments_count}</Text>
@@ -631,6 +642,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#000000",
     marginBottom: 15,
+  },
+  postImageContainer: {
+    marginBottom: 15,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  postImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
   },
   postStats: {
     flexDirection: "row",

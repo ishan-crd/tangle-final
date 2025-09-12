@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useEffect, useState } from "react";
 import {
     Alert,
@@ -8,7 +9,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
 import { SvgXml } from 'react-native-svg';
 import { useUser } from "../../../contexts/UserContext";
@@ -158,24 +159,13 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Stories Section */}
+        {/* Sponsored Profiles Section */}
         <View style={styles.storiesSection}>
           <View style={styles.storiesHeader}>
-            <Text style={styles.storiesTitle}>Stories</Text>
-            <View>
-              <Text style={styles.seeAllText}>See All</Text>
-            </View>
+            <Text style={styles.storiesTitle}>Sponsored Profiles</Text>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.storiesContainer}>
-            {/* Add Story */}
-            <View style={styles.storyItem}>
-              <View style={styles.addStoryCircle}>
-                <Text style={styles.addStoryPlus}>+</Text>
-              </View>
-              <Text style={styles.storyLabel}>Add Story</Text>
-            </View>
-            
-            {/* Story 1 */}
+            {/* Profile 1 */}
             <View style={styles.storyItem}>
               <View style={styles.storyCircle}>
                 <Text style={styles.storyAvatar}>👨‍🦰</Text>
@@ -183,7 +173,7 @@ export default function HomeScreen() {
               <Text style={styles.storyLabel}>Suresh Tyagi</Text>
             </View>
             
-            {/* Story 2 */}
+            {/* Profile 2 */}
             <View style={styles.storyItem}>
               <View style={styles.storyCircle}>
                 <Text style={styles.storyAvatar}>👨‍🦱</Text>
@@ -191,12 +181,28 @@ export default function HomeScreen() {
               <Text style={styles.storyLabel}>Yash Bhatt</Text>
             </View>
             
-            {/* Story 3 */}
+            {/* Profile 3 */}
             <View style={styles.storyItem}>
               <View style={styles.storyCircle}>
                 <Text style={styles.storyAvatar}>👩‍🦱</Text>
               </View>
               <Text style={styles.storyLabel}>Aditya Arora</Text>
+            </View>
+            
+            {/* Profile 4 */}
+            <View style={styles.storyItem}>
+              <View style={styles.storyCircle}>
+                <Text style={styles.storyAvatar}>👩</Text>
+              </View>
+              <Text style={styles.storyLabel}>Priya Sharma</Text>
+            </View>
+            
+            {/* Profile 5 */}
+            <View style={styles.storyItem}>
+              <View style={styles.storyCircle}>
+                <Text style={styles.storyAvatar}>👨</Text>
+              </View>
+              <Text style={styles.storyLabel}>Rahul Kumar</Text>
             </View>
           </ScrollView>
         </View>
@@ -214,7 +220,14 @@ export default function HomeScreen() {
               </Text>
             </View>
           ) : (
-            posts.map((post) => (
+            posts.map((post) => {
+              console.log('Post data:', { 
+                id: post.id, 
+                hasImage: !!post.image_url, 
+                imageUrl: post.image_url,
+                content: post.content.substring(0, 50) + '...'
+              });
+              return (
               <View key={post.id} style={styles.postCard}>
                 <View style={styles.postHeader}>
                   <View style={styles.postAvatar}>
@@ -239,6 +252,25 @@ export default function HomeScreen() {
                 <Text style={styles.postContent}>
                   {post.content}
                 </Text>
+                
+                {/* Post Image */}
+                {post.image_url && (
+                  <View style={styles.postImageContainer}>
+                    <Image 
+                      source={{ uri: post.image_url }} 
+                      style={styles.postImage}
+                      contentFit="cover"
+                      transition={200}
+                      onError={(error) => {
+                        console.log('Image load error:', error);
+                        console.log('Failed image URL:', post.image_url);
+                      }}
+                      onLoad={() => {
+                        console.log('Image loaded successfully:', post.image_url);
+                      }}
+                    />
+                  </View>
+                )}
                 
                 {/* Match/Event Card if it's a match post */}
                 {post.post_type === 'match' && (
@@ -275,7 +307,8 @@ export default function HomeScreen() {
                   </View>
                 )}
               </View>
-            ))
+              );
+            })
           )}
         </View>
       </ScrollView>
@@ -362,21 +395,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 20,
   },
-  addStoryCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 2,
-    borderColor: "#E5E5E5",
-    borderStyle: "dashed",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  addStoryPlus: {
-    fontSize: 24,
-    color: "#666666",
-  },
   storyCircle: {
     width: 60,
     height: 60,
@@ -460,6 +478,16 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 16,
     fontFamily: "Poppins-Regular",
+  },
+  postImageContainer: {
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  postImage: {
+    width: '100%',
+    height: 250,
+    borderRadius: 12,
   },
   eventCard: {
     backgroundColor: "#F0F8FF",

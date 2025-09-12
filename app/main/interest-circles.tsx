@@ -13,7 +13,7 @@ import {
     View
 } from "react-native";
 import { useUser } from "../../contexts/UserContext";
-import { ensureEmojiXmlLoaded, getEmojiXmlFromKey } from "../../lib/avatar";
+import { ensureEmojiXmlLoaded, getEmojiUriFromKey, getEmojiXmlFromKey } from "../../lib/avatar";
 import { Group, groupsService, supabase } from "../../lib/supabase";
 
 useEffect(() => { ensureEmojiXmlLoaded(); }, []);
@@ -33,7 +33,7 @@ function GroupCard({ item, onPress, onJoin, onLeave }: { item: Group; onPress: (
         .eq('group_id', item.id)
         .limit(5);
       if (!isMounted) return;
-      const uris = (data || []).map((r: any) => getAvatarUri(r.user_profile?.avatar));
+      const uris = (data || []).map((r: any) => getEmojiUriFromKey(r.user_profile?.avatar));
       setAvatars(uris);
     })();
     return () => { isMounted = false; };
@@ -96,11 +96,19 @@ export default function GroupsScreen() {
         return;
       }
 
-      const data = await groupsService.getAllGroupsInSocietyByName(userProfile.society, userProfile.id);
-      setGroups(data);
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+
+      const dataPromise = groupsService.getAllGroupsInSocietyByName(userProfile.society, userProfile.id);
+      
+      const data = await Promise.race([dataPromise, timeoutPromise]) as Group[];
+      setGroups(data || []);
     } catch (err) {
       console.error('Error fetching groups:', err);
-      setError('Failed to load groups');
+      setError('Failed to load groups. Please check your internet connection and try again.');
+      setGroups([]); // Set empty array to prevent undefined errors
     } finally {
       setLoading(false);
     }
@@ -142,7 +150,16 @@ export default function GroupsScreen() {
       }
 
       await groupsService.removeMemberFromGroup(groupId, userProfile.id);
-      Alert.alert("Success", "You've left the group!");
+      
+      // Check if group was deleted (empty group)
+      const updatedGroups = await groupsService.getAllGroupsInSocietyByName(userProfile.society, userProfile.id);
+      const groupStillExists = updatedGroups.some(g => g.id === groupId);
+      
+      if (!groupStillExists) {
+        Alert.alert("Group Deleted", "The group has been deleted as it had no members left.");
+      } else {
+        Alert.alert("Success", "You've left the group!");
+      }
       
       // Refresh the groups list
       fetchGroups();
@@ -153,7 +170,7 @@ export default function GroupsScreen() {
   };
 
   const handleBackPress = () => {
-    router.back();
+    router.push('/main/hub');
   };
 
   const filteredGroups = groups.filter(group =>
@@ -213,8 +230,13 @@ export default function GroupsScreen() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorIcon}>⚠️</Text>
-        <Text style={styles.errorTitle}>Something went wrong</Text>
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.errorTitle}>Groups Not Available</Text>
+        <Text style={styles.errorText}>
+          {error.includes('timeout') 
+            ? 'Request timed out. Please check your internet connection.'
+            : 'Groups feature is not set up yet. Please contact support or try again later.'
+          }
+        </Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchGroups}>
           <Text style={styles.retryButtonText}>Try Again</Text>
         </TouchableOpacity>
