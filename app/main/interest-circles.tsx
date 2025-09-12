@@ -16,7 +16,13 @@ import { useUser } from "../../contexts/UserContext";
 import { ensureEmojiXmlLoaded, getEmojiUriFromKey, getEmojiXmlFromKey } from "../../lib/avatar";
 import { Group, groupsService, supabase } from "../../lib/supabase";
 
-useEffect(() => { ensureEmojiXmlLoaded(); }, []);
+useEffect(() => { 
+  ensureEmojiXmlLoaded().then(() => {
+    console.log('Emoji XMLs loaded in interest-circles');
+  }).catch((error) => {
+    console.error('Failed to load emoji XMLs:', error);
+  });
+}, []);
 
 const getAvatarXml = (avatar?: string) => getEmojiXmlFromKey(avatar || undefined);
 

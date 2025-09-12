@@ -27,7 +27,11 @@ export default function HomeScreen() {
   const [joiningMatches, setJoiningMatches] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    ensureEmojiXmlLoaded();
+    ensureEmojiXmlLoaded().then(() => {
+      console.log('Emoji XMLs loaded in home');
+    }).catch((error) => {
+      console.error('Failed to load emoji XMLs:', error);
+    });
     loadPosts();
   }, [user]);
 

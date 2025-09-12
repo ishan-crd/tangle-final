@@ -30,7 +30,13 @@ export default function Profile() {
   const { user, logout } = useUser();
   const [activeTab, setActiveTab] = useState("Connections");
   
-  useEffect(() => { ensureEmojiXmlLoaded(); }, []);
+  useEffect(() => { 
+    ensureEmojiXmlLoaded().then(() => {
+      console.log('Emoji XMLs loaded in profile');
+    }).catch((error) => {
+      console.error('Failed to load emoji XMLs:', error);
+    });
+  }, []);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [societyUsers, setSocietyUsers] = useState<Array<{ id: string; name: string; avatar?: string }>>([]);

@@ -47,32 +47,55 @@ async function readAssetAsString(asset: Asset): Promise<string> {
 }
 
 export async function ensureEmojiXmlLoaded(): Promise<void> {
-  if (emojiXmlLoaded) return;
+  if (emojiXmlLoaded) {
+    console.log('ensureEmojiXmlLoaded: Already loaded');
+    return;
+  }
+  console.log('ensureEmojiXmlLoaded: Starting to load emoji XMLs');
   const assets = EMOJI_MODULES.map((m) => Asset.fromModule(m));
   const xmls = await Promise.all(
     assets.map(async (asset) => {
       try {
-        return await readAssetAsString(asset);
+        const result = await readAssetAsString(asset);
+        console.log('Loaded asset:', asset.uri, 'Length:', result.length);
+        return result;
       } catch (e) {
+        console.error('Failed to load asset:', asset.uri, e);
         return '';
       }
     })
   );
   for (let i = 0; i < xmls.length; i += 1) {
     const key = EMOJI_KEYS[i];
-    if (xmls[i]) emojiXmlByKey[key] = xmls[i];
+    if (xmls[i]) {
+      emojiXmlByKey[key] = xmls[i];
+      console.log('Stored XML for key:', key);
+    }
   }
   emojiXmlLoaded = true;
+  console.log('ensureEmojiXmlLoaded: Completed, loaded', Object.keys(emojiXmlByKey).length, 'emojis');
 }
 
 export function getEmojiXmlFromKey(avatar?: string): string | null {
-  if (!avatar) return null;
+  if (!avatar) {
+    console.log('getEmojiXmlFromKey: No avatar provided');
+    return null;
+  }
+  console.log('getEmojiXmlFromKey: Looking for avatar:', avatar);
   const match = avatar.match(/emoji(\d+)/);
-  if (!match) return null;
+  if (!match) {
+    console.log('getEmojiXmlFromKey: No emoji match found for:', avatar);
+    return null;
+  }
   const index = parseInt(match[1], 10);
-  if (Number.isNaN(index)) return null;
+  if (Number.isNaN(index)) {
+    console.log('getEmojiXmlFromKey: Invalid index for:', avatar);
+    return null;
+  }
   const key = `emoji${index}`;
-  return emojiXmlByKey[key] || null;
+  const result = emojiXmlByKey[key] || null;
+  console.log('getEmojiXmlFromKey: Key:', key, 'Found:', !!result);
+  return result;
 }
 
 // Resolve bundled emoji SVGs to packager-accessible URIs
